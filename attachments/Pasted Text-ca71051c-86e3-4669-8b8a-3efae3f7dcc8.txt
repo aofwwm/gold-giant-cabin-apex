@@ -1,0 +1,389 @@
+NEXT KAIROS TRAVEL ARCHITECTURE MILESTONE
+GLOBAL DESTINATION KNOWLEDGE + AUTOMATIC ANCHOR PACK BUILDER
+
+The Travel planning architecture is now much healthier.
+
+We currently have the correct core hierarchy:
+
+TravelPlaybook
+→ Day Theme
+→ Required Experience Groups
+→ Verified Canonical Anchors
+→ User Personalisation
+→ Supplementary Local Discovery
+→ Routing
+→ Validation
+→ Display
+
+This now works especially well for:
+
+Tokyo
+Paris
+Chengdu
+
+because those destinations have VERIFIED ANCHOR PACKS.
+
+However, the current implementation report says other destinations
+still depend more heavily on OSM/Wikidata discovery.
+
+That means:
+
+Tokyo may produce a strong curated first trip,
+
+while:
+
+London
+Seoul
+Rome
+Barcelona
+Hokkaido
+Iceland
+Bali
+New Zealand South Island
+etc.
+
+may still degrade if live discovery is thin.
+
+I do NOT want to manually program every destination.
+
+This next milestone is to make the verified-anchor architecture
+SCALABLE.
+
+==================================================
+PRIMARY GOAL
+==================================================
+
+Build a reusable:
+
+DESTINATION KNOWLEDGE COMPILER
+
+that can produce, validate, store and reuse the destination
+knowledge required by KAIROS Travel.
+
+Conceptually:
+
+DESTINATION
+↓
+DESTINATION PROFILE
+↓
+REFERENCE TRAVEL PATTERNS
+↓
+EXPERIENCE GROUPS
+↓
+CANONICAL ANCHORS
+↓
+DAY PATTERNS
+↓
+EXCURSION / BASE RELATIONSHIPS
+↓
+QUALITY VALIDATION
+↓
+DESTINATION KNOWLEDGE PACK
+↓
+CACHE / STORE
+↓
+TRAVEL PLANNER
+
+The normal user planner should consume this knowledge.
+
+It should NOT rediscover what makes London or Seoul worth visiting
+every time somebody creates a trip.
+
+==================================================
+IMPORTANT
+==================================================
+
+Do NOT redesign the current Travel planner again.
+
+Preserve:
+
+- TravelPlaybook
+- PlaybookDayPattern
+- PlaybookAnchor
+- destination hierarchy
+- first/repeat visit logic
+- pace
+- traveller archetypes
+- city/nature balance
+- child-age logic
+- day validation
+- whole-trip validation
+- meal logic
+- hotelSelectionSource fixes
+- routing
+- progressive enrichment
+- Discover
+- Place Detail
+- Map
+- photo system
+- translation system
+- free-first architecture
+
+This milestone builds the KNOWLEDGE LAYER underneath the planner.
+
+==================================================
+1. AUDIT THE CURRENT ANCHOR IMPLEMENTATION
+==================================================
+
+First inspect exactly how the current:
+
+Tokyo
+Paris
+Chengdu
+
+anchor packs are implemented.
+
+Tell me:
+
+Are they:
+
+TypeScript constants?
+
+JSON?
+
+Supabase records?
+
+manual fixtures?
+
+generated objects?
+
+How are:
+
+PlaybookDayPattern
+
+and:
+
+PlaybookAnchor
+
+linked?
+
+How does Tokyo resolve to its anchor pack?
+
+How does Paris?
+
+How does Chengdu?
+
+What happens today when:
+
+London
+
+is requested?
+
+Do not guess.
+
+==================================================
+2. CREATE A DESTINATION KNOWLEDGE PACK
+==================================================
+
+Introduce or formalise something conceptually like:
+
+DestinationKnowledgePack {
+  id,
+
+  destinationId,
+  destinationName,
+  destinationScope,
+
+  countryCode,
+
+  parentDestinationId?,
+
+  playbookIds: [],
+
+  experienceGroups: [],
+
+  anchors: [],
+
+  dayPatterns: [],
+
+  excursionRelationships: [],
+
+  baseRelationships: [],
+
+  geographicClusters: [],
+
+  durationGuidance: [],
+
+  seasonNotes: [],
+
+  sourceEvidence: [],
+
+  status,
+
+  confidence,
+
+  version,
+
+  createdAt,
+  lastVerified
+}
+
+Do not duplicate data unnecessarily if existing models already
+cover parts of this.
+
+Prefer clean composition over another giant parallel schema.
+
+==================================================
+3. DESTINATION SCOPE
+==================================================
+
+Knowledge packs must NOT be city-only.
+
+Support:
+
+COUNTRY
+
+CITY
+
+REGION
+
+ISLAND
+
+NATURE_REGION
+
+ROAD_TRIP_REGION
+
+ARCHIPELAGO
+
+EXCURSION_AREA
+
+ATTRACTION_CLUSTER
+
+MULTI_DESTINATION_CORRIDOR
+
+Examples:
+
+Japan
+
+Tokyo
+
+Kansai
+
+Hokkaido
+
+Iceland
+
+South Iceland
+
+Paris
+
+Loire Valley
+
+Swiss Alps
+
+Jungfrau Region
+
+Bali
+
+New Zealand South Island
+
+Scottish Highlands
+
+Yunnan
+
+etc.
+
+==================================================
+4. HIERARCHICAL KNOWLEDGE
+==================================================
+
+Destination knowledge should be composable.
+
+Example conceptually:
+
+Japan
+ ├ Tokyo
+ │  ├ Historic East Tokyo
+ │  ├ Shibuya / Harajuku
+ │  └ excursions
+ │
+ ├ Kansai
+ │  ├ Kyoto
+ │  ├ Osaka
+ │  ├ Nara
+ │  └ Kobe
+ │
+ ├ Hokkaido
+ ├ Kyushu
+ └ Okinawa
+
+A Japan trip can compose regional knowledge.
+
+A Hokkaido trip should NOT simply receive:
+
+Japan Classic.
+
+==================================================
+5. ANCHOR PACK BUILDER
+==================================================
+
+Create something conceptually like:
+
+buildDestinationAnchorPack(destination)
+
+It should:
+
+1. resolve canonical destination
+
+2. retrieve legitimate destination knowledge
+
+3. identify destination-defining experience groups
+
+4. identify verified major / iconic places
+
+5. classify places into geographic areas
+
+6. assign importance tier
+
+7. identify typical visit duration where defensible
+
+8. identify day-trip / excursion relationships
+
+9. identify sensible day-pattern combinations
+
+10. validate coordinates / identity
+
+11. store provenance
+
+12. save the resulting pack
+
+==================================================
+6. ANCHOR SOURCE PRIORITY
+==================================================
+
+Use multiple legitimate sources.
+
+Preferred source categories:
+
+A. OFFICIAL TOURISM
+
+national tourism organisation
+
+regional tourism organisation
+
+city tourism organisation
+
+official attraction information
+
+--------------------------------------------------
+
+B. STRUCTURED OPEN KNOWLEDGE
+
+Wikidata
+
+Wikipedia
+
+Wikivoyage where licensing permits
+
+OpenStreetMap
+
+--------------------------------------------------
+
+C. REFERENCE TRAVEL PATTERNS
+
+legitimate publicly accessible structural itinerary information
+from reputable tour/travel operators where terms permit.
+
+Extract:
+
+route structure

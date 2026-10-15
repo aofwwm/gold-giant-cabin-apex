@@ -1,0 +1,295 @@
+HASH IT OUT — FINAL PERSISTENCE POLISH
+
+The live Supabase Hash It Out backend is now working correctly.
+
+DO NOT redesign the backend.
+
+DO NOT change the security architecture.
+
+DO NOT introduce direct table access.
+
+Preserve the working RPC + RLS architecture.
+
+Current live tests already pass:
+
+- create room
+- join without account
+- anonymous submissions
+- multiple devices
+- Voices
+- Same Here
+- voting + server-side limit
+- Collate
+- rename
+- merge
+- split
+- move
+- hide / restore
+- Action / Park / Discuss / Decide Now
+- reload persistence
+- no direct anon table access
+
+I only want to close three small persistence gaps.
+
+==================================================
+1. PERSIST "SUMMARISE THE ROOM"
+==================================================
+
+Currently the AI room summary exists only on screen.
+
+Persist the latest approved/generated room summary in Supabase.
+
+It should support:
+
+top themes
+
+areas of agreement
+
+differing views
+
+possible next actions
+
+questions to explore
+
+generatedAt
+
+summaryVersion if useful.
+
+This does NOT need a new complex table if the existing schema can
+cleanly support it.
+
+Choose the smallest sensible implementation.
+
+The summary must be writable only through a host-authorised RPC.
+
+Participants may see it when the host chooses to show final results.
+
+Do not expose Gemini credentials.
+
+==================================================
+2. ACTION NOTE
+==================================================
+
+The host can already mark a theme:
+
+ACTION
+PARK
+DISCUSS
+DECIDE NOW
+
+Add an optional short host note.
+
+Example:
+
+ACTION
+
+"Map the approval workflow and identify unnecessary steps."
+
+or:
+
+DECIDE NOW
+
+"Trial this approach on Project Alpha."
+
+Persist it.
+
+The host can edit/clear it.
+
+Participant/result view may display it when appropriate.
+
+Do not let AI overwrite host-written notes.
+
+==================================================
+3. LUCKY PICK PERSISTENCE
+==================================================
+
+Cosmic Mode currently produces Lucky Pick only on screen.
+
+Make Lucky Pick reproducible within a room.
+
+When the host presses Lucky Pick:
+
+- require Cosmic Mode ON
+- require at least 2 eligible themes
+- exclude hidden themes
+- exclude PARK themes
+- select exactly one eligible cluster
+- persist its cluster ID and selected time
+
+Copy remains:
+
+"The universe gets one vote."
+
+Once selected:
+
+all viewers should see the same Lucky Pick.
+
+Refreshing must NOT randomly choose a different one.
+
+Add:
+
+REROLL LUCK
+
+only if we already have a sensible UI location for it.
+
+If rerolled:
+
+persist the new selection.
+
+Do not change vote counts.
+
+Lucky Pick is NOT AI analysis and requires:
+
+0 Gemini calls.
+
+Use secure random selection in server/database code.
+
+==================================================
+4. HOST VOTE STATE
+==================================================
+
+Inspect whether the host is allowed to participate in voting.
+
+If host voting is already intended:
+
+make host snapshot include only the host's own vote state necessary
+to render selected buttons correctly.
+
+Do NOT expose participant identities.
+
+If host is not intended to vote:
+
+leave this alone and report that decision.
+
+==================================================
+5. ROOM FINAL STATE
+==================================================
+
+A completed room should now be able to reopen and retain:
+
+question
+
+ideas
+
+clusters
+
+Voices
+
+Same Here
+
+Votes
+
+Actions
+
+action notes
+
+AI room summary
+
+Lucky Pick
+
+==================================================
+6. SECURITY
+==================================================
+
+Continue using controlled RPCs.
+
+No permissive RLS policies.
+
+No direct anon table SELECT.
+
+No host hash returned.
+
+No participant token hash returned.
+
+No anonymous identity recovery.
+
+==================================================
+7. GEMINI CALLS
+==================================================
+
+Lucky Pick:
+0
+
+Action notes:
+0
+
+Room summary:
+1 only when host explicitly presses Summarise the Room.
+
+Reloading a stored summary:
+0.
+
+==================================================
+8. DEMO ACCEPTANCE TEST
+==================================================
+
+Create:
+
+"What is one thing slowing us down at work?"
+
+Collect multiple anonymous ideas.
+
+Collate.
+
+Vote.
+
+Mark:
+
+APPROVAL PROCESS
+→ ACTION
+
+Add:
+
+"Review and simplify the approval workflow."
+
+Press:
+
+SUMMARISE THE ROOM
+
+Enable Cosmic Mode.
+
+Press:
+
+LUCKY PICK.
+
+Then completely reload/reopen the room.
+
+Expected:
+
+Action remains
+
+action note remains
+
+summary remains
+
+Lucky Pick remains exactly the same
+
+votes remain
+
+Voices remain
+
+Same Here remains.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Report:
+
+1. Files changed
+2. Supabase schema/RPC additions
+3. How summary is persisted
+4. How action notes are persisted
+5. How Lucky Pick is selected
+6. How Lucky Pick is persisted
+7. Whether host voting is supported
+8. RLS/direct-access regression result
+9. Reload test result
+10. Gemini calls
+11. Any SQL I need to run manually
+
+DO ACTUAL IMPLEMENTATION.
+
+This is a small persistence-completion task.
+
+Do not redesign Hash It Out.

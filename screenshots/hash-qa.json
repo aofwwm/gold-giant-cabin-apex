@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/?mode=hash",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 602,
+      "bodyTextHash": "ff086c17195bf6a42943137a99d7909ba452b8c771d5685efb68c4f88e27740e",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Find the right time. Th",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/hash-qa.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 602,
+      "bodyTextHash": "ff086c17195bf6a42943137a99d7909ba452b8c771d5685efb68c4f88e27740e",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Find the right time. Th",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/hash-qa-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/hash-qa.json"
+}

@@ -1,0 +1,250 @@
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/2/2026, 11:13:36 AM     │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/2/2026, 11:36:30 AM     │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/2/2026, 12:02:51 PM     │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/2/2026, 12:49:42 PM     │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/2/2026, 1:32:21 PM      │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/3/2026, 5:40:45 AM      │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+
+ ╭─────────────── [Environment Variables] ─────────────────╮
+ │                                                         │
+ │  Loaded variables from .env files (preview mode only).  │
+ │  Set platform environment variables for production:     │
+ │   - VITE_SUPABASE_ANON_KEY                              │
+ │   - VITE_SUPABASE_URL                                   │
+ │                                                         │
+ ╰─────────────────────────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/3/2026, 12:38:57 PM     │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+
+ ╭─────────────── [Environment Variables] ─────────────────╮
+ │                                                         │
+ │  Loaded variables from .env files (preview mode only).  │
+ │  Set platform environment variables for production:     │
+ │   - VITE_SUPABASE_ANON_KEY                              │
+ │   - VITE_SUPABASE_URL                                   │
+ │                                                         │
+ ╰─────────────────────────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/3/2026, 5:29:19 PM      │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+
+ ╭─────────────── [Environment Variables] ─────────────────╮
+ │                                                         │
+ │  Loaded variables from .env files (preview mode only).  │
+ │  Set platform environment variables for production:     │
+ │   - VITE_SUPABASE_ANON_KEY                              │
+ │   - VITE_SUPABASE_URL                                   │
+ │                                                         │
+ ╰─────────────────────────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/3/2026, 5:29:19 PM      │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+
+ ╭─────────────── [Environment Variables] ─────────────────╮
+ │                                                         │
+ │  Loaded variables from .env files (preview mode only).  │
+ │  Set platform environment variables for production:     │
+ │   - VITE_SUPABASE_ANON_KEY                              │
+ │   - VITE_SUPABASE_URL                                   │
+ │                                                         │
+ ╰─────────────────────────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/4/2026, 1:52:30 AM      │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+
+ ╭─────────────── [Environment Variables] ─────────────────╮
+ │                                                         │
+ │  Loaded variables from .env files (preview mode only).  │
+ │  Set platform environment variables for production:     │
+ │   - VITE_SUPABASE_ANON_KEY                              │
+ │   - VITE_SUPABASE_URL                                   │
+ │                                                         │
+ ╰─────────────────────────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/4/2026, 2:29:03 AM      │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+
+ ╭─────────────── [Environment Variables] ─────────────────╮
+ │                                                         │
+ │  Loaded variables from .env files (preview mode only).  │
+ │  Set platform environment variables for production:     │
+ │   - VITE_SUPABASE_ANON_KEY                              │
+ │   - VITE_SUPABASE_URL                                   │
+ │                                                         │
+ ╰─────────────────────────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/
+
+> preview
+> node scripts/with-app-env.mjs vite preview
+
+
+ ╭────────── [Build Info] ─────────────╮
+ │                                     │
+ │  - Build Directory: .vercel/output  │
+ │  - Date: 10/5/2026, 4:53:21 PM      │
+ │  - Nitro Version: 3.0.260610-beta   │
+ │  - Nitro Preset: vercel             │
+ │                                     │
+ ╰─────────────────────────────────────╯
+
+
+ ╭─────────────── [Environment Variables] ─────────────────╮
+ │                                                         │
+ │  Loaded variables from .env files (preview mode only).  │
+ │  Set platform environment variables for production:     │
+ │   - VITE_SUPABASE_ANON_KEY                              │
+ │   - VITE_SUPABASE_URL                                   │
+ │                                                         │
+ ╰─────────────────────────────────────────────────────────╯
+
+  ➜  Local:   http://127.0.0.1:8081/

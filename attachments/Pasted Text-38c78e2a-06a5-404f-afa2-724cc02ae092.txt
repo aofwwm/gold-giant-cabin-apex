@@ -1,0 +1,2070 @@
+You are working on my existing KAIROS Travel application.
+
+I want to REWORK THE CORE TRAVEL-PLANNING ENGINE.
+
+IMPORTANT:
+
+Do NOT rebuild Travel from scratch.
+
+Inspect the current implementation first.
+
+Preserve all currently working infrastructure and UX unless this prompt explicitly changes it, including:
+
+- Travel V3
+- DestinationProfile
+- DestinationNode / country-region-city work
+- multi-city / multi-country architecture
+- Discover
+- Plan
+- Map
+- hotel/base optimisation
+- routing/navigation handoff
+- place translation
+- place photo pipeline
+- external links / Google reviews handoff
+- affiliate architecture
+- free-first provider approach
+- Supabase
+- existing user preferences
+- Keep / Remix concepts
+- weather and routing integrations
+- current Kairos visual identity
+
+This is primarily a CHANGE TO HOW THE FIRST TRAVEL PLAN IS CURATED.
+
+Do actual implementation.
+
+Do not merely describe an architecture.
+
+==================================================
+CORE PROBLEM
+==================================================
+
+The current planning engine still behaves too much like:
+
+destination
+→ discover lots of POIs
+→ rank POIs
+→ ask AI to assemble an itinerary
+
+This produces weak / random travel planning.
+
+Examples of problems we have already seen:
+
+- Kamakura city itself being treated as a 90-minute attraction
+- arbitrary cafés/restaurants
+- famous attractions being omitted without good reason
+- cities being treated as the only useful destination unit
+- nature / day trips outside cities being underrepresented
+- plans that are geographically valid but do not feel like a trip an experienced human travel planner would design
+- too much dependence on whatever POIs happened to be returned by OSM
+- first-cut itineraries that require too much user fixing
+
+I want KAIROS to start from PROVEN TRAVEL PATTERNS.
+
+==================================================
+NEW CORE PHILOSOPHY
+==================================================
+
+KAIROS should NOT invent the fundamental structure of a major destination trip from scratch.
+
+Instead:
+
+1. Study established itinerary patterns from multiple reputable travel sources.
+
+2. Identify the destinations / regions / excursions / experiences that repeatedly appear.
+
+3. Identify common route sequences.
+
+4. Identify typical number of nights.
+
+5. Identify common day-trip relationships.
+
+6. Identify which elements are essential for a FIRST VISIT.
+
+7. Identify valid alternative patterns.
+
+8. Build a KAIROS TRAVEL PLAYBOOK.
+
+9. Select the appropriate playbook based on trip duration.
+
+10. Personalise that proven skeleton for the traveller.
+
+11. Only THEN optimise exact attractions, timing, routing, hotel bases, meals and weather.
+
+Conceptually:
+
+PROVEN TRIP PATTERNS
+↓
+KAIROS CONSENSUS PLAYBOOK
+↓
+TRIP DURATION
+↓
+TRAVELLER TYPE
+↓
+USER PREFERENCES
+↓
+SEASON / DATES
+↓
+BASE STRATEGY
+↓
+GEOGRAPHIC OPTIMISATION
+↓
+ACTUAL POIs
+↓
+ROUTING
+↓
+DETAILED ITINERARY
+
+==================================================
+IMPORTANT PRODUCT LANGUAGE
+==================================================
+
+Do NOT tell users:
+
+"This is objectively the best itinerary."
+
+Travel agencies optimise for different things.
+
+Use language such as:
+
+KAIROS CLASSIC
+
+CLASSIC FIRST VISIT
+
+PROVEN ROUTE
+
+A STRONG FIRST-TRIP PATTERN
+
+or:
+
+"Built from commonly used travel patterns, then adapted to you."
+
+The agency / tourism consensus is a PLANNING PRIOR.
+
+It is not absolute truth.
+
+==================================================
+NEW CONCEPT:
+KAIROS TRAVEL PLAYBOOK
+==================================================
+
+Create a structured:
+
+TravelPlaybook
+
+Conceptually:
+
+TravelPlaybook {
+  id,
+
+  destinationId,
+  destinationName,
+  destinationScope,
+
+  durationBand,
+  minNights,
+  maxNights,
+
+  visitType,
+  firstVisit,
+
+  routeSkeleton,
+
+  essentialExperienceGroups,
+  importantExperienceGroups,
+  optionalExperienceGroups,
+
+  commonBases,
+  dayTripRelationships,
+  excursionRelationships,
+
+  typicalHotelChanges,
+
+  travellerVariants,
+
+  seasonVariants,
+
+  evidence,
+
+  sourceConfidence,
+
+  lastUpdated
+}
+
+==================================================
+ROUTE SKELETON
+==================================================
+
+The playbook should understand the broad structure of a trip.
+
+Example conceptually for Japan:
+
+Tokyo
+↓
+Fuji / Hakone region
+↓
+Kyoto
+↓
+Osaka
+
+Possible day trip:
+Nara
+
+Possible extension:
+Hiroshima
+
+This does NOT mean every Japan trip must follow this exact route.
+
+The point is:
+
+Kairos should know this is a commonly successful first-trip structure.
+
+==================================================
+IMPORTANT:
+DO NOT COPY TOUR OPERATOR TEXT
+==================================================
+
+Do NOT copy itinerary prose from:
+
+tour agencies
+blogs
+guidebooks
+commercial travel sites
+
+Do NOT reproduce their day-by-day descriptions.
+
+Do NOT scrape protected content contrary to site terms.
+
+We want FACTUAL STRUCTURAL SIGNALS such as:
+
+destinations visited
+
+route order
+
+duration
+
+nights
+
+day trips
+
+experience categories
+
+major attractions
+
+transport pattern
+
+Do not store/copypaste their creative itinerary text.
+
+==================================================
+SOURCE TYPES
+==================================================
+
+Build Travel Playbooks using multiple types of legitimate sources.
+
+SOURCE TYPE A:
+MAJOR TOUR OPERATORS
+
+Purpose:
+
+learn established route structures
+
+common destination combinations
+
+trip lengths
+
+day-trip relationships
+
+what is repeatedly considered important
+
+Examples may include reputable international and regional operators.
+
+Do NOT hard-code around one company.
+
+--------------------------------------------------
+
+SOURCE TYPE B:
+OFFICIAL TOURISM BOARDS
+
+Purpose:
+
+understand destination-defining attractions
+
+regions
+
+seasonal experiences
+
+official tourism geography
+
+--------------------------------------------------
+
+SOURCE TYPE C:
+OPEN TRAVEL KNOWLEDGE
+
+Where legally/technically appropriate:
+
+Wikivoyage
+Wikipedia
+Wikidata
+OpenStreetMap
+
+Purpose:
+
+destination context
+
+regions
+
+canonical POIs
+
+geography
+
+place identity
+
+--------------------------------------------------
+
+SOURCE TYPE D:
+KAIROS LIVE DATA
+
+routing
+
+weather
+
+opening hours
+
+user-selected hotel
+
+current attraction availability where legitimately known
+
+Purpose:
+
+turn playbook into an ACTUAL feasible trip.
+
+==================================================
+SOURCE DIVERSITY
+==================================================
+
+Do NOT derive a playbook from one operator.
+
+Where possible use multiple independent sources.
+
+Track:
+
+source count
+
+source type
+
+source diversity
+
+last checked
+
+Do not imply consensus if only one source exists.
+
+==================================================
+REFERENCE ITINERARY MODEL
+==================================================
+
+Create something conceptually like:
+
+ReferenceItinerary {
+  id,
+
+  sourceName,
+  sourceType,
+
+  sourceUrl,
+
+  destinationScope,
+
+  title,
+
+  nights,
+
+  routeNodes: [
+    {
+      destinationId?,
+      destinationName,
+      destinationType,
+      nights?,
+      visitMode
+    }
+  ],
+
+  experienceGroups: [],
+
+  extractedFacts,
+
+  retrievedAt
+}
+
+visitMode may include:
+
+STAY
+DAY_TRIP
+EXCURSION
+PASS_THROUGH
+
+==================================================
+NORMALISE, DON'T COPY
+==================================================
+
+Example:
+
+Agency A:
+
+Tokyo
+Mt Fuji
+Kyoto
+Nara
+Osaka
+
+Agency B:
+
+Tokyo
+Hakone
+Kyoto
+Osaka
+
+Agency C:
+
+Tokyo
+Fuji Five Lakes
+Kyoto
+Nara
+Osaka
+
+Kairos may infer:
+
+STRONG CONSENSUS:
+
+Tokyo
+Fuji-region experience
+Kyoto
+Osaka
+
+COMMON OPTIONAL:
+
+Nara
+
+But this should be derived structurally.
+
+Do NOT reproduce any agency's proprietary itinerary.
+
+==================================================
+CONSENSUS ITINERARY GRAPH
+==================================================
+
+Build a reusable internal representation.
+
+Conceptually:
+
+ConsensusItineraryGraph {
+  nodes,
+  edges,
+  experienceGroups
+}
+
+Node may represent:
+
+country
+region
+city
+town
+nature area
+excursion area
+major experience cluster
+
+Edge can represent:
+
+commonly follows
+common day trip
+common excursion
+common transfer
+
+Track supporting evidence.
+
+Example:
+
+Tokyo
+→ Kyoto
+
+Tokyo
+→ Fuji region
+
+Kyoto
+↔ Nara day trip
+
+Kyoto
+→ Osaka
+
+==================================================
+CONSENSUS SIGNAL
+==================================================
+
+For each node / relationship calculate a defensible internal
+confidence based on:
+
+frequency across independent itineraries
+
+source diversity
+
+official tourism relevance
+
+first-visit importance
+
+geographic practicality
+
+Do NOT show fake precise percentages to users.
+
+Internally numbers are fine.
+
+User-facing:
+
+CORE
+
+COMMON
+
+OPTIONAL
+
+NICHE
+
+may be sufficient.
+
+==================================================
+DO NOT BLINDLY FOLLOW TOUR OPERATORS
+==================================================
+
+This is critical.
+
+Group tours may optimise for:
+
+coach logistics
+
+partner hotels
+
+guide operations
+
+group pacing
+
+fixed meal stops
+
+commercial relationships
+
+Therefore:
+
+TOUR OPERATOR CONSENSUS IS A PRIOR
+
+NOT THE FINAL PLAN.
+
+Kairos must still improve it for independent travellers.
+
+==================================================
+WHAT KAIROS SHOULD IMPROVE
+==================================================
+
+After building the consensus skeleton, optimise for:
+
+user arrival/departure
+
+actual trip duration
+
+hotel/base preference
+
+number of hotel changes
+
+transport convenience
+
+children
+
+mobility
+
+walking tolerance
+
+season
+
+weather
+
+daylight
+
+user interests
+
+previous visits
+
+budget
+
+pace
+
+traveller style
+
+city/nature balance
+
+actual geographic routing
+
+==================================================
+NEW DEFAULT PLAN
+==================================================
+
+When user gives a normal request such as:
+
+"Plan 7 days in Japan"
+
+and gives no unusual constraints:
+
+DO NOT start from a blank POI search.
+
+Start from:
+
+KAIROS CLASSIC · FIRST VISIT
+
+for:
+
+Japan
+7 days
+
+Then personalise it.
+
+==================================================
+DURATION-SPECIFIC PLAYBOOKS
+==================================================
+
+Do NOT squeeze one generic itinerary into any number of days.
+
+Support different playbooks / route patterns by duration.
+
+Conceptually:
+
+JAPAN
+
+5 nights
+FIRST TASTE
+
+7 nights
+CLASSIC FIRST VISIT
+
+10 nights
+CLASSIC + REGIONAL DEPTH
+
+14 nights
+DEEPER JAPAN
+
+ICELAND
+
+4 nights
+REYKJAVÍK + SOUTHWEST TASTE
+
+7 nights
+SOUTHERN / CLASSIC ROAD TRIP
+
+10 nights
+RING ROAD
+
+14 nights
+RING ROAD + REGIONAL DEPTH
+
+These examples are conceptual.
+
+Do NOT hard-code them without evidence.
+
+==================================================
+DURATION MATCHING
+==================================================
+
+Given:
+
+destination
+nights
+
+select the closest appropriate playbook.
+
+If no exact playbook exists:
+
+adapt the nearest one carefully.
+
+Do NOT simply:
+
+take 12-day itinerary
+÷
+compress into 6 days.
+
+==================================================
+TRAVELLER ARCHETYPES
+==================================================
+
+After choosing the baseline playbook:
+
+modify it according to traveller preferences.
+
+Support combinations.
+
+Potential primary dimensions:
+
+CLASSIC FIRST VISIT
+
+NATURE
+
+CULTURE & HERITAGE
+
+FOOD
+
+FAMILY
+
+ADVENTURE
+
+LUXURY
+
+SLOW TRAVEL
+
+COMFORT
+
+BACKPACKING / VALUE
+
+SHOPPING / ENTERTAINMENT
+
+Do NOT force one label.
+
+Allow combinations such as:
+
+Luxury + Culture
+
+Nature + Adventure
+
+Family + Comfort
+
+Food + Slow Travel
+
+==================================================
+IMPORTANT:
+PACE IS SEPARATE
+==================================================
+
+Keep:
+
+RELAXED
+
+BALANCED
+
+SEE MORE
+
+separate from traveller type.
+
+Example:
+
+Culture + Relaxed
+
+and:
+
+Culture + See More
+
+should produce different daily density.
+
+==================================================
+TRIP BALANCE IS ALSO SEPARATE
+==================================================
+
+Preserve / support:
+
+City-heavy
+Balanced
+Nature-heavy
+
+This should influence the playbook modification.
+
+==================================================
+PERSONALISATION LAYER
+==================================================
+
+Example:
+
+CLASSIC 7-DAY JAPAN BASELINE
+
+Tokyo
+Fuji-area experience
+Kyoto
+Osaka
+
+Then:
+
+USER:
+Nature-heavy
+
+Kairos may:
+
+increase scenic/nature day weight
+
+reduce shopping
+
+add appropriate mountain/lake/garden/nature experiences
+
+--------------------------------------------------
+
+USER:
+Culture + architecture
+
+Kairos may:
+
+increase Kyoto heritage
+
+historic districts
+
+temples/shrines
+
+architecture
+
+museums
+
+Nara where appropriate
+
+--------------------------------------------------
+
+USER:
+Family with children
+
+Kairos may:
+
+reduce repetitive temples
+
+reduce excessive walking
+
+add age-appropriate interactive attractions
+
+zoos/aquariums/theme parks/science museums
+
+more rest periods
+
+family-suitable meal timing
+
+BUT ONLY if children actually exist in CURRENT trip state.
+
+Do not repeat the phantom-child bug.
+
+--------------------------------------------------
+
+USER:
+Food
+
+Kairos may:
+
+increase markets
+
+local specialties
+
+meaningful restaurant experiences
+
+food districts
+
+but not random cafés.
+
+--------------------------------------------------
+
+USER:
+Luxury + Culture
+
+Kairos may:
+
+reduce unnecessary hotel moves
+
+choose excellent bases
+
+allow taxi/private transfer where it materially reduces friction
+
+prioritise high-quality cultural experiences
+
+better dining
+
+hotel quality
+
+==================================================
+EXPERIENCE GROUPS
+==================================================
+
+The engine should reason about EXPERIENCE COVERAGE rather than
+individual POI coverage.
+
+Examples:
+
+major iconic landmark
+
+history
+
+architecture
+
+traditional culture
+
+local neighbourhood
+
+food
+
+nature
+
+views
+
+modern city
+
+shopping
+
+nightlife
+
+family entertainment
+
+theme park
+
+wildlife
+
+wellness
+
+beach
+
+mountains
+
+road trip
+
+etc.
+
+==================================================
+DO NOT DISPLAY THE OLD GIANT COVERAGE AUDIT
+==================================================
+
+Keep coverage internal.
+
+Do NOT return:
+
+Not covered · heritage
+Not covered · heritage
+Not covered · heritage
+
+for dozens of attractions.
+
+That UI has already been rejected.
+
+==================================================
+FIRST-VISIT LOGIC
+==================================================
+
+If:
+
+firstVisit = true
+
+Kairos should strongly favour:
+
+destination-defining experiences
+
+major iconic areas
+
+classic geographic structure
+
+while still personalising.
+
+If:
+
+repeatVisit = true
+
+downweight previously seen icons and allow:
+
+deeper neighbourhoods
+
+less-famous regions
+
+local experiences
+
+special interests
+
+==================================================
+FIRST-VISIT FAILURE CHECK
+==================================================
+
+Before showing the first itinerary:
+
+ask internally:
+
+"Would a knowledgeable traveller recognise this as a strong
+first visit to this destination?"
+
+Check:
+
+major experience groups
+
+route structure
+
+travel burden
+
+trip duration
+
+hotel changes
+
+If a 7-day first-time Paris/Japan/Iceland/etc. plan misses most
+of what defines the destination without user reason:
+
+RECONSIDER IT BEFORE DISPLAY.
+
+==================================================
+CITY IS NOT THE PLANNING UNIT
+==================================================
+
+Preserve the previous requirement:
+
+Travel must NOT be city-centric.
+
+TravelPlaybook route nodes can be:
+
+CITY
+
+REGION
+
+TOWN
+
+NATIONAL PARK
+
+SCENIC CORRIDOR
+
+ISLAND
+
+NATURE AREA
+
+DAY-TRIP AREA
+
+EXCURSION AREA
+
+etc.
+
+==================================================
+ICELAND
+==================================================
+
+This is especially important.
+
+Iceland should not be:
+
+Reykjavík + random cities.
+
+The playbook must understand:
+
+regions
+
+road-trip corridors
+
+nature areas
+
+major experience zones
+
+bases
+
+driving relationships.
+
+==================================================
+DAY-TRIP KNOWLEDGE
+==================================================
+
+TravelPlaybook should know common relationships.
+
+Examples conceptually:
+
+Paris
+→ Versailles day trip
+
+Osaka
+→ Nara day trip
+
+Tokyo
+→ Kamakura day trip
+
+Reykjavík
+→ Golden Circle excursion
+
+Do NOT hard-code only these examples.
+
+Derive from sources.
+
+==================================================
+KAMAKURA SPECIFIC FIX
+==================================================
+
+A playbook that includes:
+
+Kamakura
+
+must represent it as:
+
+DAY-TRIP DESTINATION / AREA
+
+not:
+
+90-minute attraction.
+
+Then detailed planning discovers actual places within Kamakura.
+
+==================================================
+BROAD PLAN BEFORE POIs
+==================================================
+
+Correct process:
+
+DAY 1
+Arrival + central district
+
+DAY 2
+Major iconic city cluster
+
+DAY 3
+Kamakura day trip
+
+DAY 4
+Modern Tokyo + neighbourhood
+
+etc.
+
+ONLY AFTER broad day allocation:
+
+resolve exact attractions.
+
+Do not create exact minute-by-minute itinerary first.
+
+==================================================
+BASE / HOTEL STRATEGY
+==================================================
+
+After the route skeleton is chosen:
+
+determine sensible bases.
+
+Example:
+
+selected experience areas
+
+↓
+travel-time analysis
+
+↓
+one-base vs multi-base
+
+↓
+hotel search
+
+Do NOT choose hotels before understanding the trip geography.
+
+==================================================
+KEEP HOTEL CHANGES LOW
+==================================================
+
+For independent travellers:
+
+hotel changes have real cost:
+
+packing
+
+checkout
+
+luggage
+
+transport
+
+waiting
+
+check-in
+
+children/family burden
+
+So a travel-agency route may be simplified if Kairos determines
+that a different base strategy works better.
+
+==================================================
+MEALS
+==================================================
+
+Travel operator meal stops should NOT be copied.
+
+Kairos should determine meals independently.
+
+Use:
+
+meal timing
+
+route fit
+
+local food interest
+
+user food preference
+
+credible food data
+
+Do not import agency partner restaurants.
+
+==================================================
+FREE TIME
+==================================================
+
+Preserve useful free time.
+
+A good itinerary is not:
+
+maximum attraction count.
+
+Depending on pace:
+
+RELAXED
+more free time
+
+BALANCED
+reasonable free time
+
+SEE MORE
+denser plan
+
+==================================================
+SOURCE INGESTION / RESEARCH
+==================================================
+
+Create a clean source-ingestion process.
+
+DO NOT make live website research every time a user asks for a
+trip.
+
+Instead:
+
+research / ingest
+↓
+normalise
+↓
+build TravelPlaybook
+↓
+cache/store
+↓
+serve many trips
+
+This keeps cost and latency low.
+
+==================================================
+PLAYBOOK STORAGE
+==================================================
+
+Use Supabase or an appropriate existing persistence layer.
+
+Potential tables / structures:
+
+travel_playbooks
+
+travel_playbook_nodes
+
+travel_playbook_edges
+
+travel_playbook_sources
+
+travel_reference_itineraries
+
+Do not create excessive database complexity if a simpler
+structure works.
+
+==================================================
+SOURCE PROVENANCE
+==================================================
+
+Store:
+
+source name
+
+source URL
+
+source type
+
+retrieved/verified date
+
+which structural facts came from it
+
+Do not store large copied passages.
+
+==================================================
+SOURCE UPDATE STRATEGY
+==================================================
+
+Travel route patterns do not need refreshing every user request.
+
+Use reasonable cache/update windows.
+
+Major route structures:
+
+relatively slow-changing.
+
+Opening hours/weather:
+
+fast-changing.
+
+Keep those separate.
+
+==================================================
+NO SOURCE FETCH PER USER REQUEST
+==================================================
+
+Normal user trip generation should NOT trigger:
+
+20 travel agency web requests.
+
+Use the already-built TravelPlaybook.
+
+==================================================
+OPTIONAL ADMIN / DEV PLAYBOOK BUILDER
+==================================================
+
+If useful for my solo-founder workflow, build a simple
+development/admin utility that allows me to:
+
+enter destination
+
+run/update playbook research
+
+inspect source itinerary structures
+
+review generated consensus
+
+approve/save playbook
+
+This can be developer-only initially.
+
+Do NOT expose it to normal users.
+
+==================================================
+HUMAN REVIEW
+==================================================
+
+Because I am currently a solo founder:
+
+make TravelPlaybooks inspectable/editable.
+
+I should be able to see:
+
+Japan · 7 nights
+
+Core route:
+Tokyo → Fuji area → Kyoto → Osaka
+
+Common:
+Nara
+
+Optional:
+Hiroshima
+
+Sources:
+...
+
+Then manually correct obviously poor synthesis.
+
+Do not make the playbook an opaque AI blob.
+
+==================================================
+LLM USAGE FOR PLAYBOOK CREATION
+==================================================
+
+The LLM MAY help:
+
+extract structure from source information
+
+normalise place names
+
+classify experience groups
+
+identify common patterns
+
+synthesise consensus
+
+But:
+
+LLM must not invent source itineraries.
+
+Provide actual retrieved facts.
+
+==================================================
+LLM USAGE FOR USER TRIP
+==================================================
+
+For normal trip generation:
+
+DO NOT ask the LLM:
+
+"Invent a great Japan itinerary."
+
+Instead provide:
+
+chosen TravelPlaybook
+
+user preferences
+
+dates
+
+constraints
+
+verified place data
+
+routing/geographic data
+
+and ask it to help curate/explain the personalised version.
+
+==================================================
+CALL EFFICIENCY
+==================================================
+
+Playbook building can happen outside the normal user flow.
+
+For a normal Travel request target:
+
+playbook retrieval:
+0 LLM calls
+
+deterministic adaptation:
+0 calls where possible
+
+final curation/explanation:
+~1 call
+
+Avoid one call per day / destination / attraction.
+
+==================================================
+KAIROS CLASSIC UX
+==================================================
+
+When appropriate, show:
+
+KAIROS CLASSIC
+FIRST VISIT
+
+A proven starting point for 7 nights in Japan,
+adapted to your preferences.
+
+Then:
+
+YOUR VERSION
+
+Culture + Food
+Balanced pace
+Comfort
+Balanced city/nature
+
+==================================================
+SHOW WHAT KAIROS CHANGED
+==================================================
+
+Add an optional concise section:
+
+PERSONALISED FOR YOU
+
+Example:
+
++ More Kyoto heritage
+
++ Kept one nature day around Fuji
+
++ Added Nara for your culture preference
+
+− Reduced shopping time
+
+− Avoided an extra hotel change
+
+This helps users trust the customisation.
+
+Do NOT produce a giant explanation.
+
+==================================================
+ALTERNATIVE PLAYBOOKS
+==================================================
+
+Where multiple valid routes exist, allow:
+
+Classic
+
+More Nature
+
+More Culture
+
+More Relaxed
+
+Family
+
+etc.
+
+These should be derived from the baseline + traveller variants.
+
+==================================================
+REMIX
+==================================================
+
+"Remix trip"
+
+must NOT throw away the entire proven travel structure unless the
+user explicitly asks for:
+
+Something completely different
+
+Normal Remix should:
+
+preserve core playbook logic
+
+change optional experiences
+
+adjust daily arrangements
+
+change restaurants
+
+rebalance days
+
+==================================================
+KEEP
+==================================================
+
+If user keeps:
+
+Kyoto
+
+or:
+
+Kamakura day
+
+or:
+
+Day 3
+
+then Remix must preserve it.
+
+==================================================
+PLAYBOOK CONFIDENCE
+==================================================
+
+Internally track:
+
+HIGH
+
+MEDIUM
+
+LOW
+
+based on:
+
+number/diversity of sources
+
+agreement
+
+official destination support
+
+data completeness.
+
+Do not fabricate certainty.
+
+==================================================
+DESTINATION WITHOUT A PLAYBOOK
+==================================================
+
+Not every destination will initially have a rich playbook.
+
+Fallback:
+
+1. official tourism structure
+
+2. Wikivoyage/open destination knowledge
+
+3. major-place coverage
+
+4. geographic clustering
+
+5. current Travel V3 planner
+
+But clearly keep the architecture capable of upgrading once a
+playbook exists.
+
+DO NOT return no itinerary because a playbook is missing.
+
+==================================================
+PHASED IMPLEMENTATION
+==================================================
+
+Implement this in practical phases.
+
+PHASE 1
+
+Core models:
+
+ReferenceItinerary
+TravelPlaybook
+ConsensusItineraryGraph
+
+Playbook storage
+
+Playbook retrieval
+
+Planner integration
+
+--------------------------------------------------
+
+PHASE 2
+
+Build real initial playbooks for acceptance-test destinations.
+
+--------------------------------------------------
+
+PHASE 3
+
+Traveller archetype adaptation
+
+Duration-specific variants
+
+First/repeat visit
+
+--------------------------------------------------
+
+PHASE 4
+
+Developer/admin playbook inspection/update utility if feasible.
+
+Do not block Phase 1-3 on a polished admin tool.
+
+==================================================
+INITIAL DESTINATION ACCEPTANCE SET
+==================================================
+
+Build / test strong playbooks for at least:
+
+JAPAN
+
+ICELAND
+
+PARIS / FRANCE
+
+SINGAPORE
+
+CHENGDU
+
+NAGOYA / CENTRAL JAPAN
+
+These are destinations I have already been testing.
+
+==================================================
+JAPAN TEST
+==================================================
+
+Request:
+
+Japan
+7 nights
+First visit
+Balanced pace
+Comfort
+Culture + Food
+Balanced city/nature
+
+Expected:
+
+Kairos starts from a recognisable strong first-visit route.
+
+It should not feel like random POIs.
+
+Explain:
+
+baseline route
+
+personalisation
+
+major experience coverage
+
+hotel changes
+
+==================================================
+JAPAN NATURE TEST
+==================================================
+
+Same duration.
+
+Nature-heavy.
+
+Expected:
+
+more nature/scenic content
+
+less urban/shopping repetition
+
+without destroying the practical route.
+
+==================================================
+JAPAN FAMILY TEST
+==================================================
+
+2 adults
+children explicitly selected
+
+Expected:
+
+more child-appropriate experiences
+
+reasonable walking
+
+potential theme park/zoo/aquarium/interactive options where they
+actually fit.
+
+IMPORTANT:
+
+If children = 0:
+
+NONE of this child logic should activate.
+
+==================================================
+ICELAND TEST
+==================================================
+
+Request:
+
+Iceland
+7 nights
+First visit
+Nature
+Road trip
+Balanced pace
+
+Expected:
+
+region / route-corridor planning.
+
+NOT:
+
+list of cities.
+
+Playbook should reflect a proven Iceland trip pattern.
+
+==================================================
+PARIS TEST
+==================================================
+
+Request:
+
+Paris
+5 nights
+First visit
+Culture + Food
+
+Expected:
+
+major iconic Paris experience groups
+
+sensible geographic days
+
+potential major excursion logic
+
+no giant omitted-attraction audit
+
+no random low-value POIs replacing iconic experiences.
+
+==================================================
+CHENGDU TEST
+==================================================
+
+Request:
+
+Chengdu
+5 nights
+First visit
+Culture + Nature
+Comfort
+
+Expected:
+
+recognisable Chengdu core
+
+major panda experience
+
+heritage / city culture
+
+appropriate regional excursion possibilities
+
+without simply querying POIs within city-centre radius.
+
+==================================================
+NAGOYA TEST
+==================================================
+
+Request:
+
+Nagoya
+5 nights
+
+Expected:
+
+understand Nagoya as a base with meaningful regional possibilities
+where evidence supports them.
+
+Do not constrain everything to Nagoya city boundary.
+
+==================================================
+MULTI-COUNTRY TEST
+==================================================
+
+Request:
+
+France
+Switzerland
+Italy
+
+12 nights
+
+Expected:
+
+use playbooks / route relationships to propose a sensible
+country sequence and regional allocation.
+
+Then personalise.
+
+Do not independently generate three disconnected city lists.
+
+==================================================
+ROAD TRIP TEST
+==================================================
+
+Iceland road trip.
+
+Expected:
+
+route corridor
+
+driving burden
+
+bases
+
+natural experience clusters
+
+not city-to-city tourism only.
+
+==================================================
+QUALITY COMPARISON TEST
+==================================================
+
+This is important.
+
+For the SAME request compare:
+
+OLD CURRENT PLANNER
+
+vs
+
+NEW PLAYBOOK PLANNER
+
+Assess:
+
+major destination coverage
+
+route coherence
+
+hotel changes
+
+travel burden
+
+random POIs
+
+first-visit quality
+
+nature/culture balance
+
+restaurant randomness
+
+day-trip handling
+
+Do not claim improvement without checking actual outputs.
+
+==================================================
+NO RANDOM RESTAURANT PROBLEM
+==================================================
+
+The playbook should describe:
+
+food experience importance
+
+not exact agency restaurants.
+
+Actual restaurant selection happens later through:
+
+current location
+
+route
+
+meal time
+
+food preference
+
+verified venue data.
+
+==================================================
+DO NOT OVERFIT
+==================================================
+
+Do NOT create a giant static hard-coded itinerary database that
+cannot adapt.
+
+The playbook is a SKELETON + KNOWLEDGE GRAPH.
+
+Detailed itinerary remains dynamic.
+
+==================================================
+FREE-FIRST / SOLO-FOUNDER REQUIREMENT
+==================================================
+
+I am keeping KAIROS as a solo venture initially.
+
+Avoid introducing mandatory expensive travel-content APIs.
+
+Prefer:
+
+open data
+
+cached research
+
+publicly accessible legitimate sources
+
+manual/admin review
+
+existing Gemini usage
+
+Supabase
+
+Do not introduce a paid provider without reporting it first.
+
+==================================================
+COPYRIGHT / TERMS REQUIREMENT
+==================================================
+
+Do not:
+
+bulk scrape sites that prohibit it
+
+copy tour descriptions
+
+copy guidebook text
+
+reproduce copyrighted itineraries verbatim
+
+Store factual structural signals and source provenance.
+
+If a source cannot legally/technically be ingested:
+
+do not ingest it.
+
+Use other legitimate sources.
+
+==================================================
+FAILURE BEHAVIOUR
+==================================================
+
+If agency/reference sources are unavailable:
+
+use cached playbook.
+
+If no cached playbook:
+
+fall back to official/open destination knowledge.
+
+If LLM unavailable:
+
+use deterministic playbook adaptation.
+
+If routing unavailable:
+
+still produce broad trip structure.
+
+No single provider should make Travel fail.
+
+==================================================
+SUCCESS CRITERION
+==================================================
+
+The first itinerary should increasingly feel like:
+
+"An experienced travel planner started from a well-established
+way of visiting this destination, then personalised it for me."
+
+NOT:
+
+"An AI searched a database of nearby places and filled the days."
+
+==================================================
+FINAL REPORT
+==================================================
+
+After implementation, tell me:
+
+1. Files changed
+
+2. Existing planning pipeline you found
+
+3. Which parts of the old POI-first logic were retained
+
+4. Which parts were replaced
+
+5. TravelPlaybook schema
+
+6. ReferenceItinerary schema
+
+7. ConsensusItineraryGraph structure
+
+8. Source types supported
+
+9. How source provenance is stored
+
+10. How copyrighted prose is avoided
+
+11. How consensus is calculated
+
+12. How first-visit essentials are identified
+
+13. How duration-specific playbooks work
+
+14. How traveller archetypes modify the baseline
+
+15. How pace modifies the plan separately
+
+16. How city/nature balance modifies the plan
+
+17. How children are handled only when present in current trip state
+
+18. How day-trip destinations such as Kamakura are represented
+
+19. How nature/regions outside cities are handled
+
+20. How hotel/base strategy occurs after trip structure
+
+21. How food is handled separately from tour-operator restaurants
+
+22. How many Gemini calls a normal Travel request now makes
+
+23. How playbooks are cached
+
+24. How I can inspect/edit playbooks as the solo founder
+
+25. Which initial playbooks were actually created
+
+26. Exact source count/types used for each initial playbook
+
+27. Japan 7-night Classic test result
+
+28. Japan Nature test result
+
+29. Japan Family test result
+
+30. Iceland 7-night road-trip test result
+
+31. Paris 5-night test result
+
+32. Chengdu 5-night test result
+
+33. Nagoya test result
+
+34. Multi-country France/Switzerland/Italy result
+
+35. OLD vs NEW planner comparison
+
+36. Any important limitations
+
+DO ACTUAL IMPLEMENTATION.
+
+Do not merely explain the concept.
+
+Do NOT consider this complete if a normal first-time itinerary is
+still fundamentally created by:
+
+"find some POIs and ask the LLM to arrange them."
+
+The desired architecture is:
+
+PROVEN TRAVEL PATTERNS
+→ KAIROS CONSENSUS PLAYBOOK
+→ USER PERSONALISATION
+→ GEOGRAPHIC / LIVE VALIDATION
+→ DETAILED ITINERARY.

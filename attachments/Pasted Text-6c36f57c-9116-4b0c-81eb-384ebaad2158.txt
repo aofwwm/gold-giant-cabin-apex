@@ -1,0 +1,277 @@
+Please STOP tuning the Dating ranking weights for now.
+
+There is a more fundamental DISCOVERY problem.
+
+REAL TEST:
+
+I asked Kairos for a date night around Pasir Ris.
+
+Across multiple rerolls, Kairos basically recycled:
+
+- Changi Village
+- 328 Katong Laksa
+- Changi Village again
+
+This is unacceptable.
+
+The problem is NOT merely ranking.
+
+The candidate universe itself is too small / incorrectly filtered / incorrectly deduplicated.
+
+I need you to inspect and FIX the Dating discovery pipeline.
+
+==================================================
+OBSERVED FAILURES
+==================================================
+
+1. Very few unique places are discovered.
+
+2. Changi Village appears more than once.
+
+3. 328 Katong Laksa appears even though the requested area is Pasir Ris.
+
+4. “Another Plan” keeps recombining the same handful of candidates.
+
+5. Dating appears to rely too heavily on food POIs.
+
+6. Full date concepts lack enough activity / experience candidates.
+
+==================================================
+FIRST: TRACE THE ACTUAL CANDIDATE PIPELINE
+==================================================
+
+For a test request:
+
+Area:
+Pasir Ris
+
+Mode:
+Dating
+
+Discovery:
+Mix It Up
+
+Log the following BEFORE ranking:
+
+TOTAL raw places discovered
+
+UNIQUE places after deduplication
+
+BREAKDOWN BY CATEGORY:
+
+restaurant
+cafe
+dessert
+activity
+attraction
+park
+scenic
+entertainment
+shopping
+workshop
+live event
+other
+
+Then log:
+
+candidates after geographic filtering
+
+candidates after travel-time filtering
+
+candidates after opening-hour filtering
+
+candidates after date/vibe filtering
+
+candidates passed into final planner
+
+I want to know WHERE the candidate pool collapses.
+
+==================================================
+DO NOT RANK UNTIL THE DISCOVERY POOL IS HEALTHY
+==================================================
+
+The system should NOT search 10 places and immediately take the top 3.
+
+For Dating, first build a sufficiently broad candidate pool.
+
+Target where data allows:
+
+30–100+ raw candidates
+
+across multiple useful categories
+
+BEFORE final ranking / itinerary construction.
+
+Do not artificially stop after the first few OSM results.
+
+==================================================
+DATING NEEDS DIFFERENT PLACE DISCOVERY FROM MAKAN
+==================================================
+
+Do NOT reuse a food-centric Makan candidate set as the complete Dating universe.
+
+Dating discovery must include:
+
+FOOD
+- restaurant
+- cafe
+- dessert
+- bakery
+- food court where appropriate
+
+ACTIVITIES
+- bowling
+- arcade
+- karaoke
+- games
+- workshops
+- arts/crafts
+- sports/recreation
+- leisure activities
+
+PLACES TO WALK / TALK
+- parks
+- waterfronts
+- promenades
+- gardens
+- scenic areas
+
+ATTRACTIONS
+- galleries
+- museums
+- exhibitions
+- visitor attractions
+- cultural places
+
+ENTERTAINMENT
+- cinema where requested
+- performance venues
+- event venues
+- entertainment centres
+
+SHOPPING / BROWSING
+- malls
+- lifestyle districts
+- bookstores
+- specialty clusters
+
+LIVE / TEMPORARY
+- verified exhibitions
+- markets
+- festivals
+- pop-ups
+- performances
+- workshops
+
+Only use categories supported by real source data.
+
+Do not fabricate venues.
+
+==================================================
+PASIR RIS TEST AREA
+==================================================
+
+For a broad request such as:
+
+“around Pasir Ris”
+
+do NOT reduce the entire search to one single point with a tiny radius.
+
+Use sensible nearby geographic clusters based on VERIFIED travel time.
+
+Potential candidate clusters may include areas around:
+
+Pasir Ris
+Downtown East
+Pasir Ris Park
+Loyang
+Changi
+Tampines
+
+and other nearby areas ONLY if they satisfy the selected travel limit.
+
+Do NOT hardcode these as always valid.
+
+The routing engine determines whether each candidate actually fits.
+
+==================================================
+TRAVEL LIMIT MUST BE APPLIED BEFORE FINAL PLANNING
+==================================================
+
+If the user specifies a travel limit:
+
+the first stop must pass verified travel-time filtering.
+
+Every subsequent stop must also pass sequential route validation.
+
+A place must not survive merely because its textual area sounds nearby.
+
+For example:
+
+Pasir Ris request
+→ candidate in Katong
+
+must be rejected if verified travel time exceeds the user's constraint.
+
+Do not let LLM decide whether Katong is “close enough”.
+
+==================================================
+STRICT DEDUPLICATION
+==================================================
+
+Changi Village must NEVER appear twice as two separate recommendations in the same planning set.
+
+Deduplicate using, in priority order:
+
+provider ID
+
+then normalised:
+name + coordinates
+
+then:
+normalised name + address
+
+Also deduplicate aliases / near-identical POIs where possible.
+
+Example:
+
+Changi Village
+Changi Village Hawker Centre
+Changi Village Food Centre
+
+may or may not represent the same destination.
+
+Resolve intelligently using coordinates/provider IDs.
+
+==================================================
+VENUE VS AREA
+==================================================
+
+Also distinguish:
+
+AREA / DISTRICT
+
+from:
+
+ACTUAL VENUE
+
+“Changi Village” is an area.
+
+It should not be treated exactly like:
+
+a restaurant
+a cafe
+a specific activity venue
+
+If the plan says:
+
+Changi Village
+
+Kairos should understand it as a neighbourhood/area stop, for example:
+
+“Explore Changi Village + waterfront”
+
+not pretend that Changi Village itself is a restaurant.
+
+==================================================
+AD

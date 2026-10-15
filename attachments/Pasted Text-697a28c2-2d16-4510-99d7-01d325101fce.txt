@@ -1,0 +1,488 @@
+Please FIX the Dating invitation share failure in the existing Kairos app.
+
+I have identified the actual runtime error.
+
+When I press:
+
+- Share
+- WhatsApp
+- Copy Link
+- Share...
+
+the UI gets stuck at:
+
+“Creating the link…”
+
+and displays this error:
+
+ENOENT: no such file or directory, mkdir '/workspace'
+
+This means the invitation creation code is attempting to access/create a filesystem directory called:
+
+/workspace
+
+That is incorrect for this deployed/browser/serverless environment.
+
+IMPORTANT:
+
+Do NOT redesign the sharing UI.
+
+Do NOT work around the error by simply creating /workspace.
+
+Do NOT hide the error.
+
+Fix the underlying invitation creation architecture.
+
+==================================================
+FIRST: FIND THE SOURCE OF /workspace
+==================================================
+
+Search the ENTIRE project for:
+
+"/workspace"
+
+Also search for:
+
+mkdir
+mkdirSync
+fs.mkdir
+fs.mkdirSync
+writeFile
+writeFileSync
+node:fs
+fs/promises
+tmpdir
+temporary files
+invitation HTML generation
+file generation
+share-link generation
+
+Tell me exactly which file/function is attempting:
+
+mkdir('/workspace')
+
+or equivalent.
+
+==================================================
+IMPORTANT ARCHITECTURE RULE
+==================================================
+
+Creating a Dating invitation should NOT require writing files to disk.
+
+The correct flow is:
+
+Dating plan
+↓
+Create/update invitation in Supabase
+↓
+Generate/retrieve invite_slug
+↓
+Build public URL
+↓
+Enable sharing
+
+There should be NO:
+
+mkdir('/workspace')
+writeFile('/workspace/...')
+local HTML file creation
+temporary invitation file
+filesystem-based share link
+
+The invitation page should be rendered dynamically from Supabase data.
+
+==================================================
+REMOVE FILESYSTEM DEPENDENCY
+==================================================
+
+Remove the /workspace filesystem requirement from the Dating invitation sharing flow.
+
+Do NOT replace it with another hardcoded folder.
+
+Do NOT use:
+
+/workspace
+/home/...
+C:\\...
+project-local generated files
+
+Invitation sharing should work without filesystem access.
+
+If some server-side temporary file is genuinely required elsewhere, use the platform-supported temporary directory such as /tmp.
+
+BUT:
+
+Dating invitation link generation should not require any file at all.
+
+==================================================
+CORRECT INVITATION CREATION
+==================================================
+
+When Share is opened:
+
+1. Build the sanitised invitation payload.
+
+2. Create or update a row in Supabase.
+
+3. Obtain the invitation's random invite_slug.
+
+4. Generate:
+
+publicInvitationUrl
+
+Example:
+
+https://<deployed-app-domain>/date/x7K9mP2vQc
+
+5. Mark invitation URL creation as successful.
+
+6. Enable:
+
+WhatsApp
+Share…
+Copy Link
+Copy Message + Link
+
+==================================================
+SUPABASE
+==================================================
+
+Inspect whether an existing table already exists, such as:
+
+dating_invitations
+
+Do NOT create a duplicate table if one already exists.
+
+Verify that Share actually inserts/updates a record.
+
+After pressing Share, I should be able to see the invitation row in Supabase.
+
+Useful fields may include:
+
+id
+dating_plan_id
+invite_slug
+recipient_name
+title
+message
+tone
+visibility
+status
+public_payload
+created_at
+updated_at
+
+==================================================
+DEBUG THE SHARE PROCESS
+==================================================
+
+Add temporary development logging around these stages:
+
+[Dating Share]
+1. Share initiated
+
+2. Public payload generated
+
+3. Supabase insert/update started
+
+4. Supabase response received
+
+5. invite_slug obtained
+
+6. public URL generated
+
+7. Share buttons enabled
+
+If an error occurs, log the EXACT stage.
+
+Example:
+
+[Dating Share] Supabase insert failed:
+<actual error>
+
+Do not simply display:
+
+Creating the link...
+
+forever.
+
+==================================================
+LOADING STATE MUST END
+==================================================
+
+Currently the page remains on:
+
+Creating the link...
+
+Fix this.
+
+There must be three states:
+
+CREATING
+
+READY
+
+ERROR
+
+CREATING:
+Creating the link…
+
+READY:
+buttons become active
+
+ERROR:
+Couldn’t create the invitation.
+
+[ Try again ]
+
+Never leave the interface indefinitely loading after an exception.
+
+==================================================
+WHATSAPP
+==================================================
+
+Once publicInvitationUrl exists:
+
+WhatsApp should construct a normal WhatsApp sharing URL.
+
+It must NOT call filesystem code.
+
+Example message:
+
+Thought this could be nice 🙂
+
+Friday · 7:00 PM
+
+https://<domain>/date/x7K9mP2vQc
+
+URL encode the message properly.
+
+User still presses Send inside WhatsApp.
+
+==================================================
+NATIVE SHARE
+==================================================
+
+Share… should use:
+
+navigator.share({
+  title,
+  text,
+  url: publicInvitationUrl
+})
+
+ONLY after publicInvitationUrl exists.
+
+If navigator.share is unsupported:
+
+hide/disable Share…
+
+but keep:
+
+WhatsApp
+Copy Link
+Copy Message + Link
+
+working.
+
+==================================================
+COPY LINK
+==================================================
+
+Copy Link should simply do:
+
+navigator.clipboard.writeText(publicInvitationUrl)
+
+No filesystem.
+
+No file creation.
+
+No generated HTML document.
+
+==================================================
+PUBLIC INVITATION PAGE
+==================================================
+
+The URL:
+
+/date/:inviteSlug
+
+should dynamically fetch the invitation from Supabase.
+
+It should NOT attempt to load a generated local file.
+
+Flow:
+
+inviteSlug
+↓
+Supabase
+↓
+public_payload
+↓
+React invitation page
+
+==================================================
+CHECK FOR DEVELOPMENT-ENVIRONMENT CODE
+==================================================
+
+I suspect some code was generated assuming an AI coding sandbox where /workspace exists.
+
+Remove any development-environment assumptions from production runtime code.
+
+Search specifically for code copied from:
+
+- sandbox tooling
+- local development scripts
+- Node filesystem setup
+- generated artifact code
+
+None of that belongs in the runtime invitation flow.
+
+==================================================
+DO NOT CONFUSE BUILD-TIME AND RUN-TIME
+==================================================
+
+Build scripts may legitimately operate on project files.
+
+Browser/runtime invitation sharing must NOT.
+
+Ensure filesystem modules are not accidentally imported into client-side React components.
+
+For example, client components must NOT import:
+
+fs
+node:fs
+node:fs/promises
+path
+
+for this feature.
+
+==================================================
+VERIFY SUPABASE ENV
+==================================================
+
+After removing the /workspace failure, verify that Supabase itself is configured correctly.
+
+Check:
+
+Supabase URL
+Supabase anon/public key
+
+Do NOT expose:
+
+service_role key
+
+If Supabase then returns an RLS error, report that separately.
+
+Do not assume RLS is the current problem before fixing /workspace.
+
+==================================================
+TEST 1 — CREATE INVITATION
+==================================================
+
+Open Dating.
+
+Generate a Dating plan.
+
+Press Share.
+
+Expected:
+
+No ENOENT error.
+
+“Creating the link…” completes.
+
+Invitation URL becomes available.
+
+==================================================
+TEST 2 — SUPABASE
+==================================================
+
+After Share:
+
+Confirm a dating invitation record actually exists in Supabase.
+
+Report:
+
+invite_slug
+status
+
+Do not expose any secret keys.
+
+==================================================
+TEST 3 — COPY LINK
+==================================================
+
+Press Copy Link.
+
+Expected:
+
+Clipboard contains:
+
+https://<deployed-domain>/date/<inviteSlug>
+
+UI briefly shows:
+
+Copied ✓
+
+==================================================
+TEST 4 — INCOGNITO
+==================================================
+
+Paste the copied URL into an incognito browser.
+
+Expected:
+
+Invitation loads without login.
+
+No local state dependency.
+
+No filesystem dependency.
+
+==================================================
+TEST 5 — WHATSAPP
+==================================================
+
+Press WhatsApp.
+
+Expected:
+
+WhatsApp opens with the invitation message and same public URL.
+
+No filesystem errors.
+
+==================================================
+TEST 6 — NATIVE SHARE
+==================================================
+
+On supported mobile browser:
+
+Press Share…
+
+Expected:
+
+Android/iOS native share sheet opens.
+
+==================================================
+FINAL REQUIREMENT
+==================================================
+
+Please FIX this now.
+
+Do not merely explain the ENOENT error.
+
+After implementation tell me:
+
+1. Which file contained the /workspace reference
+2. Why /workspace was being created
+3. What filesystem dependency you removed
+4. Whether invitation creation now writes directly to Supabase
+5. Whether the Supabase insert succeeds
+6. Which table is used
+7. How invite_slug is generated
+8. The format of the public invitation URL
+9. Whether Copy Link now works
+10. Whether WhatsApp now opens correctly
+11. Whether navigator.share works on supported mobile browsers
+12. Result of an incognito invitation-link test
+13. Any remaining Supabase/RLS error, if one exists

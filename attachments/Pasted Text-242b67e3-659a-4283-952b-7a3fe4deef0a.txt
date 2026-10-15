@@ -1,0 +1,1392 @@
+CRITICAL TRAVEL PLAYBOOK COVERAGE UPGRADE
+
+I reviewed the implementation from the previous TravelPlaybook task.
+
+The current report says playbooks were created only for:
+
+Japan
+Iceland
+Paris
+France
+Switzerland
+Italy
+Singapore
+Chengdu
+Nagoya
+
+This appears to be only the acceptance-test seed set from my previous prompt.
+
+That is NOT sufficient for the actual KAIROS Travel product.
+
+However:
+
+DO NOT solve this by manually hard-coding 190+ countries.
+
+I want a SCALABLE, SOLO-FOUNDER-FRIENDLY PLAYBOOK COVERAGE SYSTEM.
+
+==================================================
+CORE REQUIREMENT
+==================================================
+
+KAIROS Travel must be capable of generating a high-quality
+TravelPlaybook for ANY supported travel destination when needed.
+
+Conceptually:
+
+USER REQUESTS DESTINATION
+↓
+CHECK PLAYBOOK CACHE
+↓
+PLAYBOOK EXISTS?
+YES → USE IT
+NO → BUILD PLAYBOOK
+↓
+VALIDATE
+↓
+SAVE
+↓
+USE
+↓
+REUSE ON FUTURE REQUESTS
+
+The current manually seeded destinations should remain useful,
+but they must NOT be the only destinations with playbook support.
+
+==================================================
+IMPORTANT:
+PLAYBOOK IS NOT COUNTRY-ONLY
+==================================================
+
+Support playbooks for multiple geographic scopes:
+
+COUNTRY
+
+CITY
+
+REGION
+
+ISLAND
+
+NATURE REGION
+
+ROAD-TRIP REGION
+
+MULTI-COUNTRY CORRIDOR
+
+EXCURSION AREA
+
+Examples:
+
+Japan
+
+Tokyo
+
+Hokkaido
+
+Kansai
+
+Okinawa
+
+Iceland
+
+South Iceland
+
+Paris
+
+Provence
+
+Swiss Alps
+
+Jungfrau Region
+
+Bali
+
+New Zealand South Island
+
+California
+
+Scottish Highlands
+
+Yunnan
+
+Chengdu
+
+Kyushu
+
+etc.
+
+Do not assume:
+
+destination = country
+
+or:
+
+destination = city.
+
+==================================================
+1. AUDIT CURRENT IMPLEMENTATION FIRST
+==================================================
+
+Before changing code, determine:
+
+Why were only these playbooks created?
+
+Are they:
+
+hard-coded seed objects?
+
+JSON?
+
+TypeScript constants?
+
+Supabase rows?
+
+generated at build time?
+
+generated from references?
+
+Do normal destination searches only access those exact entries?
+
+What happens today if I request:
+
+London
+
+Bangkok
+
+Barcelona
+
+Sydney
+
+New Zealand
+
+Vietnam
+
+Bali
+
+Hokkaido
+
+Portugal
+
+Norway
+
+Morocco
+
+Turkey
+
+?
+
+Report the actual behaviour.
+
+==================================================
+2. CREATE A PLAYBOOK REGISTRY
+==================================================
+
+Create a central TravelPlaybookRegistry.
+
+Conceptually:
+
+TravelPlaybookRegistry {
+  destinationId,
+
+  destinationName,
+
+  destinationScope,
+
+  status,
+
+  confidence,
+
+  version,
+
+  sourceCount,
+
+  sourceDiversity,
+
+  createdAt,
+
+  lastVerified,
+
+  nextReviewAt
+}
+
+Possible status:
+
+CURATED
+
+GENERATED
+
+PROVISIONAL
+
+STALE
+
+BUILDING
+
+FAILED
+
+==================================================
+3. PLAYBOOK RESOLUTION
+==================================================
+
+Create something conceptually like:
+
+ensureTravelPlaybook(destination)
+
+Behaviour:
+
+A. Find exact playbook.
+
+B. If not found, inspect parent/regional playbooks.
+
+C. If sufficient knowledge can be inherited:
+   create appropriate derived context.
+
+D. Otherwise build a new destination playbook.
+
+E. Validate it.
+
+F. Persist/cache it.
+
+G. Return it to planner.
+
+==================================================
+4. DO NOT BUILD PLAYBOOK FROM ZERO FOR EVERY USER
+==================================================
+
+Once:
+
+London
+
+has a validated playbook:
+
+the next London traveller should reuse it.
+
+Do NOT repeat destination research for every trip.
+
+Personalisation happens AFTER retrieval.
+
+==================================================
+5. SEPARATE DESTINATION KNOWLEDGE FROM USER VARIANTS
+==================================================
+
+Do NOT permanently store:
+
+London Nature traveller
+
+London Family traveller
+
+London Food traveller
+
+London Luxury traveller
+
+London Culture traveller
+
+as five entirely separate playbooks unless there is a strong
+technical reason.
+
+Prefer:
+
+LONDON CORE PLAYBOOK
++
+TRAVELLER ARCHETYPE TRANSFORMATION
++
+TRIP DURATION
++
+USER CONSTRAINTS
+
+This massively reduces storage/research requirements.
+
+==================================================
+6. SAME FOR DURATION
+==================================================
+
+Do not create hundreds of nearly identical objects.
+
+Core destination knowledge should understand:
+
+route patterns
+
+minimum useful stay
+
+common duration bands
+
+optional extensions
+
+Then derive:
+
+3-night
+
+5-night
+
+7-night
+
+10-night
+
+etc.
+
+Only persist separate duration templates where the route genuinely
+changes substantially.
+
+==================================================
+7. PLAYBOOK BUILD PIPELINE
+==================================================
+
+When a destination does not have a good playbook:
+
+BUILD it from legitimate sources.
+
+Pipeline:
+
+CANONICAL DESTINATION
+↓
+OFFICIAL / OPEN DESTINATION KNOWLEDGE
+↓
+REFERENCE ITINERARY STRUCTURES
+↓
+MAJOR EXPERIENCE GROUPS
+↓
+COMMON ROUTE / BASE PATTERNS
+↓
+DAY-TRIP RELATIONSHIPS
+↓
+DURATION PATTERNS
+↓
+CONSENSUS SYNTHESIS
+↓
+VALIDATION
+↓
+PERSIST
+
+==================================================
+8. SOURCE PRIORITY
+==================================================
+
+Use legitimate sources where technically/legally available.
+
+Tier A:
+
+Official national tourism organisations
+
+Official regional/city tourism organisations
+
+Tier B:
+
+Multiple reputable tour operators where their publicly available
+structural itinerary facts may legitimately be accessed
+
+Tier C:
+
+Wikivoyage
+
+Wikipedia
+
+Wikidata
+
+OpenStreetMap
+
+Other existing permitted open sources
+
+Do NOT copy copyrighted itinerary prose.
+
+Extract only legitimate factual/structural signals.
+
+==================================================
+9. TRAVEL AGENCY CONSENSUS
+==================================================
+
+My original intention is important.
+
+I want Kairos to learn from how established travel companies
+commonly structure trips.
+
+Where legitimate source access exists, identify:
+
+destinations included
+
+route order
+
+number of nights
+
+common excursions
+
+day-trip relationships
+
+experience groups
+
+typical trip length
+
+Do NOT merely rely on:
+
+Wikivoyage + Wikipedia
+
+if stronger itinerary-pattern evidence can legitimately be
+obtained.
+
+==================================================
+10. BUT DO NOT FAKE AGENCY CONSENSUS
+==================================================
+
+If Kairos only has:
+
+Wikivoyage
+
+and:
+
+Wikipedia
+
+then do NOT call that:
+
+TRAVEL AGENCY CONSENSUS.
+
+Label internal confidence appropriately.
+
+Example:
+
+sourceCoverage = OPEN_GUIDE_ONLY
+
+versus:
+
+sourceCoverage = MULTI_SOURCE
+
+versus:
+
+sourceCoverage = MULTI_OPERATOR_CONSENSUS
+
+==================================================
+11. SOURCE DIVERSITY TARGET
+==================================================
+
+For major destinations, try to obtain multiple independent
+structural references.
+
+Ideal where legally/technically feasible:
+
+1+ official tourism source
+
+2+ independent itinerary/operator sources
+
+1+ open destination knowledge source
+
+This is a TARGET.
+
+Do not fail completely if fewer are available.
+
+==================================================
+12. PLAYBOOK CONFIDENCE
+==================================================
+
+Calculate internal confidence.
+
+Example:
+
+HIGH
+
+Multiple reputable independent sources agree on major route /
+experience structure.
+
+MEDIUM
+
+Good destination knowledge but limited itinerary consensus.
+
+LOW
+
+Sparse source coverage.
+
+Do NOT show fake:
+
+93.7% confidence.
+
+==================================================
+13. USER-FACING DIFFERENCE
+==================================================
+
+For HIGH confidence:
+
+KAIROS CLASSIC
+A strong first-visit route based on established travel patterns.
+
+For lower confidence:
+
+KAIROS CURATED
+Built from the best destination information currently available.
+
+Do not overclaim.
+
+==================================================
+14. NEVER BLOCK A TRIP
+==================================================
+
+If playbook research/build fails:
+
+fall back to the current Travel V3 destination planner.
+
+Correct:
+
+PLAYBOOK
+→ preferred
+
+DESTINATION PROFILE
+→ fallback
+
+POI + geographic planner
+→ final fallback
+
+The user still gets a trip.
+
+==================================================
+15. BUILD ON DEMAND
+==================================================
+
+This is important for keeping KAIROS cheap as a solo venture.
+
+Do NOT research every obscure destination in the world up front.
+
+Instead:
+
+POPULAR DESTINATIONS
+→ prebuild/cache
+
+LONG-TAIL DESTINATIONS
+→ build when first requested
+
+Then save them.
+
+This is essentially:
+
+LAZY PLAYBOOK GENERATION.
+
+==================================================
+16. STARTER PLAYBOOK LIBRARY
+==================================================
+
+Expand the current seed library beyond the tiny acceptance set.
+
+Create a sensible starter set of HIGH-DEMAND travel destinations.
+
+Do not choose destinations arbitrarily.
+
+Use a defensible broad tourism set spanning:
+
+East Asia
+
+Southeast Asia
+
+South Asia
+
+Europe
+
+North America
+
+Oceania
+
+Middle East
+
+Africa
+
+Latin America
+
+Islands / nature destinations
+
+The exact number should remain practical for a solo founder.
+
+Target something like:
+
+30–50 high-demand destination playbooks
+
+for the initial cache
+
+IF the research pipeline can support them responsibly.
+
+Do not make 50 garbage playbooks merely to hit a number.
+
+Quality > count.
+
+==================================================
+17. EXAMPLE STARTER COVERAGE
+==================================================
+
+Candidate areas could include things like:
+
+Japan
+
+Tokyo
+
+Kansai
+
+Hokkaido
+
+South Korea
+
+Seoul
+
+China
+
+Beijing
+
+Shanghai
+
+Chengdu
+
+Yunnan
+
+Hong Kong
+
+Taiwan
+
+Singapore
+
+Thailand
+
+Bangkok
+
+Vietnam
+
+Bali / Indonesia
+
+Malaysia
+
+Australia
+
+New Zealand
+
+France
+
+Paris
+
+Italy
+
+Rome
+
+Switzerland
+
+Spain
+
+Barcelona
+
+United Kingdom
+
+London
+
+Portugal
+
+Greece
+
+Iceland
+
+Norway
+
+Netherlands
+
+Germany
+
+Austria
+
+United States
+
+New York
+
+California
+
+Canada
+
+Turkey
+
+UAE
+
+etc.
+
+IMPORTANT:
+
+These are examples.
+
+Do NOT blindly hard-code this list if better destination-demand
+information exists.
+
+==================================================
+18. COUNTRY PLAYBOOK DOES NOT REPLACE REGIONAL PLAYBOOK
+==================================================
+
+Example:
+
+JAPAN
+
+provides country-level first-trip structure.
+
+HOKKAIDO
+
+needs a separate regional travel pattern.
+
+TOKYO
+
+needs city/excursion knowledge.
+
+KANSai
+
+may understand:
+
+Kyoto
+Osaka
+Nara
+Kobe
+
+These should interoperate.
+
+==================================================
+19. HIERARCHICAL PLAYBOOKS
+==================================================
+
+Support relationships:
+
+Japan
+ ├ Tokyo
+ ├ Kansai
+ │  ├ Kyoto
+ │  ├ Osaka
+ │  ├ Nara
+ │  └ Kobe
+ ├ Hokkaido
+ ├ Kyushu
+ └ Okinawa
+
+France
+ ├ Paris
+ ├ Normandy
+ ├ Loire Valley
+ ├ Alsace
+ ├ Provence
+ └ Riviera
+
+This is conceptual.
+
+Derive from real destination geography.
+
+==================================================
+20. MULTI-COUNTRY PLAYBOOK COMPOSITION
+==================================================
+
+If user asks:
+
+France + Switzerland + Italy
+
+do NOT require one giant prebuilt:
+
+France-Switzerland-Italy
+
+playbook.
+
+Compose:
+
+France knowledge
+
++
+
+Switzerland knowledge
+
++
+
+Italy knowledge
+
++
+
+cross-border geographic / transport reasoning
+
+Then identify sensible route.
+
+If a common multi-country corridor exists:
+
+use that knowledge too.
+
+==================================================
+21. BUILD-TIME VS USER-TIME
+==================================================
+
+Do not make the user wait several minutes for exhaustive research.
+
+Implement a staged approach.
+
+If cached:
+
+instant.
+
+If missing:
+
+A. retrieve/build enough structured knowledge to create a good
+   provisional playbook
+
+B. save it
+
+C. create the user's itinerary
+
+D. allow later administrative refresh/enrichment
+
+Do not claim a background refresh occurred unless the application
+actually implements one.
+
+==================================================
+22. PERFORMANCE
+==================================================
+
+Normal cached playbook retrieval should be extremely cheap.
+
+Target:
+
+database/cache lookup
+
+not:
+
+many live web/source calls.
+
+==================================================
+23. PLAYBOOK VERSIONING
+==================================================
+
+Playbooks need versioning.
+
+Store:
+
+playbookVersion
+
+schemaVersion
+
+lastVerified
+
+sourceSnapshot
+
+If refreshed:
+
+do not silently corrupt existing saved itineraries.
+
+Existing trips should preserve their generated structure unless the
+user asks to replan.
+
+==================================================
+24. FOUNDER REVIEW
+==================================================
+
+The previous implementation said:
+
+describePlaybook(id)
+
+prints the sheet a founder would review.
+
+Keep that.
+
+But improve it.
+
+I should be able to request:
+
+describePlaybook("japan")
+
+and see:
+
+scope
+
+confidence
+
+core route
+
+duration bands
+
+essential experience groups
+
+common excursions
+
+alternative route patterns
+
+traveller variants
+
+source count
+
+source diversity
+
+source names
+
+last verified
+
+warnings
+
+==================================================
+25. PLAYBOOK COVERAGE COMMAND
+==================================================
+
+Add a developer/founder utility conceptually like:
+
+listPlaybookCoverage()
+
+Output:
+
+Destination
+Scope
+Status
+Confidence
+Source count
+Last verified
+
+I should be able to immediately see what Kairos knows.
+
+==================================================
+26. MISSING PLAYBOOK COMMAND
+==================================================
+
+Add something like:
+
+buildPlaybook(destination)
+
+for development/founder use.
+
+Example:
+
+buildPlaybook("Portugal")
+
+It should:
+
+resolve destination
+
+research legitimate configured sources
+
+create playbook
+
+validate
+
+store
+
+return review sheet
+
+==================================================
+27. BULK BOOTSTRAP
+==================================================
+
+Add a controlled developer utility conceptually like:
+
+bootstrapPopularPlaybooks(limit)
+
+This is for me as the solo founder.
+
+It should build a manageable batch of popular destinations.
+
+Respect:
+
+source rate limits
+
+API limits
+
+LLM quotas
+
+Do NOT launch hundreds of simultaneous requests.
+
+==================================================
+28. DO NOT PUT THIS IN USER UI
+==================================================
+
+Normal users should not see:
+
+buildPlaybook
+
+source count
+
+raw source names
+
+confidence diagnostics
+
+These remain developer/founder tools.
+
+==================================================
+29. COUNTRY REQUEST TEST
+==================================================
+
+Delete/ignore any cached London playbook.
+
+User requests:
+
+London
+5 nights
+First visit
+
+Expected:
+
+Kairos detects missing playbook.
+
+Builds/resolves London knowledge.
+
+Creates and stores playbook.
+
+Generates user itinerary.
+
+Second London user:
+
+uses stored playbook.
+
+No full playbook research again.
+
+==================================================
+30. REGION TEST
+==================================================
+
+Request:
+
+Hokkaido
+7 nights
+
+Expected:
+
+Hokkaido-specific playbook.
+
+Do NOT simply serve:
+
+Japan Classic.
+
+==================================================
+31. LONG-TAIL TEST
+==================================================
+
+Request:
+
+Slovenia
+7 nights
+
+If no playbook exists:
+
+build a provisional/validated playbook.
+
+Do not return:
+
+Unsupported destination.
+
+==================================================
+32. CITY TEST
+==================================================
+
+Request:
+
+Barcelona
+4 nights
+
+Expected:
+
+city-level playbook + excursion knowledge.
+
+==================================================
+33. ISLAND TEST
+==================================================
+
+Request:
+
+Bali
+6 nights
+
+Expected:
+
+understand different areas/bases.
+
+Do not model Bali as one city.
+
+==================================================
+34. NATURE TEST
+==================================================
+
+Request:
+
+New Zealand South Island
+10 nights
+
+Expected:
+
+region / route / road-trip structure.
+
+Not a city list.
+
+==================================================
+35. MULTI-COUNTRY TEST
+==================================================
+
+Request:
+
+Austria
+Czech Republic
+Hungary
+
+10 nights
+
+Expected:
+
+compose relevant playbooks
+
+find sensible route order
+
+do not require manually stored exact combination.
+
+==================================================
+36. SOURCE FAILURE TEST
+==================================================
+
+Simulate one tour-operator source unavailable.
+
+Expected:
+
+use remaining sources.
+
+Do not fail playbook.
+
+==================================================
+37. NO-AGENCY-DATA TEST
+==================================================
+
+For a destination with no usable agency/reference itinerary sources:
+
+use:
+
+official tourism
+
+open destination knowledge
+
+geography
+
+Then mark internally:
+
+PROVISIONAL / MEDIUM or LOW source consensus
+
+Do not invent operator consensus.
+
+==================================================
+38. COPYRIGHT / TERMS
+==================================================
+
+Continue to avoid:
+
+copying tour prose
+
+bulk prohibited scraping
+
+storing copyrighted itinerary descriptions
+
+Only store legitimate:
+
+route structure
+
+factual stops
+
+durations
+
+relationships
+
+experience categories
+
+source provenance.
+
+==================================================
+39. LLM EFFICIENCY
+==================================================
+
+Building a new playbook may require AI.
+
+Serving an existing playbook should not.
+
+For an ordinary trip with cached playbook:
+
+playbook research LLM calls:
+0
+
+Normal final curation:
+approximately 1 where needed.
+
+==================================================
+40. DO NOT PRECOMPUTE EVERY PERSONA
+==================================================
+
+This is important.
+
+The database should NOT explode into:
+
+Japan-family-nature-7day
+
+Japan-family-culture-7day
+
+Japan-couple-luxury-7day
+
+Japan-food-10day
+
+etc.
+
+Store:
+
+CORE DESTINATION KNOWLEDGE
+
+Then dynamically apply:
+
+traveller style
+
+pace
+
+duration
+
+family state
+
+city/nature balance
+
+budget
+
+hotel preference
+
+etc.
+
+==================================================
+41. PLAYBOOK QUALITY VALIDATION
+==================================================
+
+Before a generated playbook is accepted:
+
+check:
+
+Does it include major destination-defining experience groups?
+
+Does route make geographic sense?
+
+Are common day-trip relationships represented?
+
+Are cities/regions typed correctly?
+
+Are nature areas outside cities represented?
+
+Are typical stays reasonable?
+
+Does it contain bizarre low-value nodes?
+
+Did the source consensus actually support it?
+
+If validation fails:
+
+keep as provisional
+
+or use fallback planner.
+
+==================================================
+42. MOST IMPORTANT PRODUCT TEST
+==================================================
+
+The system must support this behaviour:
+
+User:
+"I want 8 days in Portugal."
+
+Even if Portugal has NEVER been requested before:
+
+Kairos should be capable of creating a strong initial Travel
+Playbook, storing it, then personalising the trip.
+
+I should NOT have to manually ask Grok to program Portugal first.
+
+==================================================
+43. CURRENT SEEDED PLAYBOOKS
+==================================================
+
+Do NOT delete:
+
+Japan
+Iceland
+Paris
+France
+Switzerland
+Italy
+Singapore
+Chengdu
+Nagoya
+
+Treat these as the first seed set.
+
+But migrate them into the same scalable registry architecture if
+necessary.
+
+==================================================
+FINAL REPORT
+==================================================
+
+After implementation tell me:
+
+1. Why only the small set of playbooks existed previously
+
+2. Whether those were hard-coded or persisted/generated
+
+3. Files changed
+
+4. New TravelPlaybookRegistry architecture
+
+5. How ensureTravelPlaybook() works
+
+6. How a missing destination gets built
+
+7. How playbooks are cached
+
+8. How country/city/region/island/nature scopes work
+
+9. How hierarchical playbooks work
+
+10. How multi-country composition works
+
+11. How source diversity/confidence works
+
+12. How false agency consensus is prevented
+
+13. How copyright/source restrictions are handled
+
+14. How founder review works
+
+15. How listPlaybookCoverage works
+
+16. How buildPlaybook(destination) works
+
+17. Whether bootstrapPopularPlaybooks was implemented
+
+18. Number of existing playbooks after migration
+
+19. Number of NEW starter playbooks actually built
+
+20. List of all playbook scopes currently stored
+
+21. London cold-start result
+
+22. London second-request/cache result
+
+23. Hokkaido result
+
+24. Slovenia long-tail result
+
+25. Barcelona result
+
+26. Bali result
+
+27. New Zealand South Island result
+
+28. Austria/Czech Republic/Hungary result
+
+29. Cached-playbook Gemini call count
+
+30. Missing-playbook build call count
+
+31. Any destination types that still cannot be handled
+
+DO ACTUAL IMPLEMENTATION.
+
+DO NOT merely create another small hard-coded list.
+
+DO NOT consider this complete if I still have to manually tell Grok:
+
+"Please create a playbook for country X"
+
+every time a user searches somewhere new.
+
+The target architecture is:
+
+ANY DESTINATION
+↓
+RESOLVE
+↓
+PLAYBOOK CACHE
+↓
+BUILD IF MISSING
+↓
+VALIDATE
+↓
+SAVE
+↓
+PERSONALISE
+↓
+ITINERARY.

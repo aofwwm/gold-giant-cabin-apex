@@ -1,0 +1,252 @@
+We have now confirmed the recipient reply IS reaching Supabase.
+
+The latest dating_invitations rows contain:
+
+planner_token = populated
+status = sounds_good
+
+Therefore:
+
+RECIPIENT RESPONSE = WORKING
+
+The remaining bug is ONLY planner-side retrieval.
+
+I have created this Supabase RPC:
+
+public.get_dating_invitation_for_planner(
+  p_planner_token text
+)
+
+It returns:
+
+invite_slug
+status
+recipient_note
+updated_at
+public_payload
+
+==================================================
+FIX THE ORIGINAL DATING PLANNER SCREEN
+==================================================
+
+When a Dating invitation is created, the returned planner_token must be stored persistently in the planner's browser.
+
+Do NOT keep it only in React state.
+
+Use the existing client persistence architecture or localStorage.
+
+Associate the planner token with the Dating plan.
+
+Example concept:
+
+kairosDatingInvites = {
+  "<datingPlanId>": {
+    "plannerToken": "...",
+    "inviteSlug": "..."
+  }
+}
+
+==================================================
+WHEN PLANNER OPENS THE DATING PLAN
+==================================================
+
+1. Retrieve the stored plannerToken.
+
+2. Call:
+
+const { data, error } = await supabase.rpc(
+  "get_dating_invitation_for_planner",
+  {
+    p_planner_token: plannerToken
+  }
+);
+
+3. Use the result to populate the Invitation Status panel.
+
+==================================================
+STATUS UI
+==================================================
+
+Map:
+
+pending
+→ SENT · WAITING FOR REPLY
+
+sounds_good
+→ ✓ I'M UP FOR IT
+
+alternate_time_requested
+→ ANOTHER TIME REQUESTED
+
+revoked
+→ INVITATION CANCELLED
+
+Do NOT display raw database status names.
+
+==================================================
+EXAMPLE
+==================================================
+
+If Supabase returns:
+
+{
+  status: "sounds_good",
+  recipient_note: null
+}
+
+show:
+
+INVITATION
+
+✓ I'M UP FOR IT
+
+If recipient_note exists:
+
+INVITATION
+
+✓ I'M UP FOR IT
+
+“7 PM works for me.”
+
+==================================================
+IMPORTANT:
+REFRESH THE STATUS
+==================================================
+
+The planner should not need to rebuild the Dating plan.
+
+Refresh invitation status:
+
+- when the planner screen loads
+- when the browser regains focus
+- after returning to the Dating page
+
+Also add lightweight polling every 10–15 seconds while the page is visible OR use Supabase Realtime if already supported cleanly.
+
+==================================================
+PRIVATE PLANNER LINK
+==================================================
+
+Also ensure:
+
+/date/manage/:plannerToken
+
+uses the SAME RPC:
+
+get_dating_invitation_for_planner
+
+It should show the same response.
+
+==================================================
+DO NOT QUERY BY
+==================================================
+
+Do NOT match by:
+
+recipient name
+date
+title
+restaurant
+current browser session
+
+Use ONLY:
+
+planner_token
+
+==================================================
+OLD INVITATIONS
+==================================================
+
+Some old Supabase rows have:
+
+planner_token = NULL
+
+These were created before the new two-token architecture.
+
+Do not attempt planner-token retrieval for them.
+
+New invitations must always contain planner_token.
+
+==================================================
+RECIPIENT NOTE
+==================================================
+
+The database now has:
+
+recipient_note
+
+Update the existing:
+
+respond_to_dating_invitation
+
+RPC so p_note writes to recipient_note.
+
+Do NOT overwrite the sender's original message.
+
+==================================================
+TODAY
+==================================================
+
+When planner lookup returns:
+
+status = sounds_good
+
+mark the linked Dating plan as confirmed.
+
+Then Today should display:
+
+DATE · CONFIRMED
+
+on the agreed date.
+
+Do not create a duplicate Dating plan.
+
+If status is:
+
+alternate_time_requested
+
+do NOT move Today automatically.
+
+==================================================
+MANDATORY TEST
+==================================================
+
+Use a BRAND NEW invitation.
+
+1. Planner creates invitation.
+2. Confirm planner_token exists.
+3. Confirm planner browser stores planner_token.
+4. Recipient opens public link.
+5. Recipient presses “I'm up for it”.
+6. Supabase status becomes sounds_good.
+7. Return to original planner screen.
+8. Expected:
+   ✓ I'M UP FOR IT
+9. Refresh browser.
+10. Status must still appear.
+11. Open private planner URL.
+12. Same status must appear.
+13. Today should show the date as confirmed.
+
+Report:
+
+planner_token stored locally:
+YES / NO
+
+planner RPC:
+PASS / FAIL
+
+Supabase status:
+<actual value>
+
+original planner screen:
+PASS / FAIL
+
+after refresh:
+PASS / FAIL
+
+private planner link:
+PASS / FAIL
+
+Today integration:
+PASS / FAIL

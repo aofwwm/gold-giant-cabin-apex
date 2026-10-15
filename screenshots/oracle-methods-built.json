@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/?mode=oracle",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 984,
+      "bodyTextHash": "b57ff0ff1789b55de11c456b82e03296fe94f8b03640b62fba43660dec136cd8",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Find the right time. Th",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/oracle-methods-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 857,
+      "bodyTextHash": "d89956c90fbb8b02d5958d0a35bf2124d9a56b9a312ccd8a53cf7d0d74606b5e",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Find the right time. Th",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/oracle-methods-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/oracle-methods-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

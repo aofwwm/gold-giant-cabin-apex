@@ -1,0 +1,608 @@
+Please FIX the Dating itinerary duration and meal-slot logic.
+
+The recommendation quality is now much better, so DO NOT undo the new novelty/diversity/place-ranking improvements.
+
+CURRENT BUG:
+
+I selected:
+
+Start:
+9:00 AM
+
+Plan type:
+FULL DAY WITH FOOD
+
+But Kairos generated only a morning / half-day itinerary.
+
+It also produced nonsense meal labels such as:
+
+9:14 AM–10:24 AM
+Lunch
+
+10:37 AM–12:02 PM
+Dinner
+
+This is wrong.
+
+The selected plan length must materially control itinerary generation.
+
+==================================================
+PLAN TYPE MUST BE A HARD STRUCTURAL CONSTRAINT
+==================================================
+
+Define the three plan types clearly.
+
+FOOD ONLY
+
+Target duration:
+approximately 1–2.5 hours
+
+Typical structure:
+meal
++
+optional nearby dessert/drink
+
+Example:
+
+7:00 PM Dinner
+8:30 PM Dessert
+
+==================================================
+HALF DAY WITH FOOD
+
+Target duration:
+approximately 3–5 hours
+
+Typical structure:
+
+activity
+→ meal
+→ optional second activity / dessert
+
+Example:
+
+2:00 PM Activity
+4:00 PM Coffee
+5:30 PM Early dinner
+
+OR:
+
+6:00 PM Activity
+7:30 PM Dinner
+9:00 PM Dessert
+
+==================================================
+FULL DAY WITH FOOD
+
+Target duration:
+approximately 8–10 hours
+
+This MUST feel like a real full-day date.
+
+Typical structure:
+
+morning activity
+→ lunch
+→ afternoon activity
+→ rest / coffee / dessert
+→ evening activity
+→ dinner
+→ optional final stop
+
+Example starting at 9:00 AM:
+
+9:00 AM
+Morning activity
+
+11:30 AM
+Coffee / light break
+
+12:30 PM
+Lunch
+
+2:00 PM
+Afternoon activity
+
+4:30 PM
+Dessert / cafe / rest
+
+5:30 PM
+Scenic / cultural / playful stop
+
+7:00 PM
+Dinner
+
+8:30 PM
+Optional walk / drink / dessert
+
+Do NOT force every slot if real options do not support it, but Full Day must span most of the day.
+
+==================================================
+FULL DAY MINIMUM DURATION
+==================================================
+
+If planType = full_day_with_food:
+
+target minimum itinerary span:
+7 hours
+
+preferred:
+8–10 hours
+
+Do not return a 3-hour itinerary and call it Full Day.
+
+If suitable venues cannot fill the full day:
+
+say so explicitly and offer:
+
+“Only a partial plan could be verified.”
+
+Do NOT silently downgrade Full Day to Half Day.
+
+==================================================
+USE THE USER'S START TIME
+==================================================
+
+Start time is a hard anchor.
+
+Example:
+
+startTime = 09:00
+
+Full Day should build forward from 09:00.
+
+Do not generate an arbitrary later start.
+
+==================================================
+MEAL LABELS MUST FOLLOW CLOCK TIME
+==================================================
+
+Meal labels must be determined using deterministic time windows.
+
+Suggested default:
+
+BREAKFAST:
+06:00–10:30
+
+BRUNCH:
+09:30–12:00
+
+LUNCH:
+11:30–14:30
+
+AFTERNOON TEA / COFFEE:
+14:00–17:30
+
+DINNER:
+17:30–21:30
+
+LATE NIGHT / SUPPER:
+21:00 onward
+
+Do NOT let the LLM call:
+
+9:14 AM = Lunch
+
+or:
+
+10:37 AM = Dinner
+
+unless the user explicitly requested unusual meal timing.
+
+==================================================
+IMPORTANT:
+SELECTED “TIME” VS ACTUAL START TIME
+==================================================
+
+The UI currently has:
+
+Breakfast
+Brunch
+Afternoon
+Sunset
+Dinner
+Night
+
+AND an exact Start Time.
+
+Make sure these do not conflict.
+
+If user selects:
+
+Breakfast
+
+and:
+
+Start at 9:00 AM
+
+that means:
+
+the date begins in the breakfast/morning period.
+
+It does NOT mean every meal should be Breakfast.
+
+For a Full Day starting at 9 AM, later meal slots must evolve naturally:
+
+9 AM:
+Breakfast / morning activity
+
+12–1 PM:
+Lunch
+
+7 PM:
+Dinner
+
+==================================================
+PLAN TYPE MUST REACH THE ITINERARY ENGINE
+==================================================
+
+Trace the state end-to-end.
+
+Check whether:
+
+full_day_with_food
+
+is correctly passed from:
+
+UI button
+↓
+Dating form state
+↓
+request payload
+↓
+planning function
+↓
+LLM / itinerary builder
+↓
+result validator
+
+I suspect the UI shows Full Day selected but the generator is still using:
+
+half_day
+
+or a default duration.
+
+Log:
+
+[DATE PLAN]
+planType:
+startTime:
+targetDurationMinutes:
+minimumEndTime:
+maximumEndTime:
+
+==================================================
+DERIVE TARGET END TIME
+==================================================
+
+Normal application code should calculate the planning horizon.
+
+Example:
+
+planType:
+full_day_with_food
+
+start:
+09:00
+
+target duration:
+9 hours
+
+target end:
+18:00
+
+Then allow some flexibility such as:
+
+17:00–20:00
+
+depending on the itinerary.
+
+Do NOT ask the LLM to decide whether “full day” means 3 or 9 hours.
+
+==================================================
+SUGGESTED DURATION RULES
+==================================================
+
+Use deterministic defaults such as:
+
+food_only:
+90–150 minutes
+
+half_day_with_food:
+210–300 minutes
+
+full_day_with_food:
+420–600 minutes
+
+These can vary slightly based on user constraints.
+
+But the category boundaries must be respected.
+
+==================================================
+STOP COUNT
+==================================================
+
+Also inspect whether the itinerary generator has a hard cap such as:
+
+maxStops = 2
+maxStops = 3
+
+That could explain why Full Day finishes too early.
+
+Suggested:
+
+FOOD ONLY:
+1–2 stops
+
+HALF DAY:
+2–4 stops
+
+FULL DAY:
+4–7 stops
+
+Do not fill the day with meaningless stops just to hit the number.
+
+==================================================
+ACTIVITY / FOOD BALANCE
+==================================================
+
+Full Day should NOT become:
+
+breakfast
+lunch
+dessert
+dinner
+dessert
+
+It needs actual things to do.
+
+Aim for a balanced structure such as:
+
+ACTIVITY
+FOOD
+ACTIVITY
+REST / FOOD
+ACTIVITY
+FOOD
+
+==================================================
+AVOID MEAL-ONLY FULL DAY
+==================================================
+
+The purpose of:
+
+Full day with food
+
+is:
+
+a full DATE with meals built around it.
+
+Not:
+
+an all-day restaurant crawl
+
+unless the user explicitly asks for that.
+
+==================================================
+ROUTING
+==================================================
+
+Continue using sequential verified routing:
+
+Start
+→ Stop 1
+→ Stop 2
+→ Stop 3
+→ etc.
+
+Each stop start time must include:
+
+previous stop duration
++
+verified travel duration
++
+appropriate buffer
+
+==================================================
+TIME VALIDATION PASS
+==================================================
+
+After itinerary construction, run deterministic validation.
+
+Check:
+
+1. Start time >= requested start
+2. End time consistent with plan type
+3. Stops are chronological
+4. No overlapping stops
+5. Meal labels match clock time
+6. Travel time fits between stops
+7. Full Day meets minimum duration
+8. Half Day does not accidentally become Full Day
+9. Food Only remains compact
+
+If validation fails:
+
+repair/regenerate BEFORE showing the plan.
+
+==================================================
+BAD EXAMPLE THAT MUST FAIL
+==================================================
+
+Input:
+
+Start:
+09:00
+
+Plan type:
+Full day with food
+
+Output:
+
+09:14–10:24 Lunch
+10:37–12:02 Dinner
+
+FAIL because:
+
+- only ~3 hours
+- lunch too early
+- dinner far too early
+- not a full day
+- no proper daytime structure
+
+==================================================
+GOOD EXAMPLE
+==================================================
+
+Start:
+09:00
+
+Full day with food
+
+Possible output:
+
+09:00–10:30
+Morning activity
+
+10:45–11:30
+Coffee
+
+12:00–13:15
+Lunch
+
+13:30–15:30
+Afternoon activity
+
+15:45–16:30
+Dessert / rest
+
+17:00–18:30
+Evening activity / scenic stop
+
+19:00–20:30
+Dinner
+
+This is structurally appropriate.
+
+==================================================
+DO NOT DAMAGE THE IMPROVED RECOMMENDATIONS
+==================================================
+
+The venue suggestions are now much better.
+
+Preserve:
+
+- broader candidate pool
+- novelty history
+- Mix It Up
+- Surprise Me
+- diversified plans
+- recent recommendation penalties
+- real routing
+- improved place discovery
+
+This fix is ONLY about:
+
+PLAN DURATION
++
+TIME STRUCTURE
++
+MEAL LABELS
++
+STOP COUNT
+
+==================================================
+ACCEPTANCE TEST 1
+==================================================
+
+Start:
+09:00
+
+Plan:
+Full day with food
+
+Expected:
+
+itinerary spans at least approximately 7 hours.
+
+Contains:
+
+morning
+lunch
+afternoon
+evening/dinner
+
+==================================================
+ACCEPTANCE TEST 2
+==================================================
+
+Start:
+09:00
+
+Expected:
+
+no Dinner label before 17:30 unless explicitly requested.
+
+==================================================
+ACCEPTANCE TEST 3
+==================================================
+
+Start:
+18:00
+
+Half day with food
+
+Expected:
+
+evening plan of roughly 3–5 hours.
+
+Do not generate morning/lunch items.
+
+==================================================
+ACCEPTANCE TEST 4
+==================================================
+
+Food only
+19:00
+
+Expected:
+
+approximately 1–2 stops.
+
+Do not generate full-day activities.
+
+==================================================
+ACCEPTANCE TEST 5
+==================================================
+
+Change:
+
+Half day
+→ Full day
+
+without changing other inputs.
+
+Expected:
+
+the itinerary becomes materially longer.
+
+Not simply the same plan with a different label.
+
+==================================================
+FINAL REQUEST
+==================================================
+
+Please IMPLEMENT the fix.
+
+After implementation report:
+
+1. Why Full Day was previously ending around noon
+2. Whether planType was reaching the itinerary generator correctly
+3. Previous target duration
+4. New duration rules for all 3 plan types
+5. Previous max stop count
+6. New stop-count logic
+7. How meal labels are now assigned
+8. How final itinerary duration is validated
+9. Result of Full Day 9 AM acceptance test
+10. Confirmation that the improved venue diversity system was preserved

@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 1793,
+      "bodyTextHash": "04f0f7b2bb1e3a1d5d0ff6dac3bdd9eb9984569fa56f7ec7a1267b7e1a3f1549",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Not every free slot is ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 1793,
+      "bodyTextHash": "04f0f7b2bb1e3a1d5d0ff6dac3bdd9eb9984569fa56f7ec7a1267b7e1a3f1549",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Not every free slot is ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

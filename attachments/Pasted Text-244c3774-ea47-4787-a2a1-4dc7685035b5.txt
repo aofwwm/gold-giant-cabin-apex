@@ -1,0 +1,559 @@
+Please change Kairos Dating invitations to a NO-LOGIN two-link architecture.
+
+IMPORTANT:
+
+I do NOT want planner accounts or login.
+
+Current Dating invitation flow already supports:
+
+- creating an invitation
+- public recipient link
+- recipient viewing invitation
+- recipient replying:
+  “I’m up for it”
+  “Suggest another time”
+- response saved to Supabase
+
+CURRENT PROBLEM:
+
+The original planner has no persistent identity, so Kairos does not reliably know which invitation/reply belongs to the planner.
+
+I have added this column to:
+
+public.dating_invitations
+
+planner_token text
+
+with a unique index.
+
+Implement a TWO-TOKEN invitation system.
+
+==================================================
+ARCHITECTURE
+==================================================
+
+Every new Dating invitation must have TWO separate secure random tokens:
+
+1. RECIPIENT TOKEN
+
+Stored as:
+
+invite_slug
+
+Used for:
+
+/date/:inviteSlug
+
+This is the link sent to the other person.
+
+Example:
+
+https://<domain>/date/A7kP9xLmQ2Rt
+
+
+2. PLANNER TOKEN
+
+Stored as:
+
+planner_token
+
+Used for:
+
+/date/manage/:plannerToken
+
+Example:
+
+https://<domain>/date/manage/Q8mP2xL9KaRt
+
+This link is PRIVATE and belongs to the planner.
+
+==================================================
+SECURITY
+==================================================
+
+Both tokens must be:
+
+- cryptographically random
+- 12–16 characters
+- URL-safe
+- alphanumeric only
+- non-sequential
+- difficult to guess
+
+Example:
+
+A7kP9xLmQ2Rt
+
+Do NOT use:
+
+1234
+date1
+sequential IDs
+
+Do NOT make the short display code the security mechanism.
+
+==================================================
+INVITATION CREATION
+==================================================
+
+Update the existing create_dating_invitation flow.
+
+When planner creates an invitation:
+
+Generate:
+
+invite_slug
+
+AND:
+
+planner_token
+
+Store both in:
+
+public.dating_invitations
+
+Existing RLS must remain enabled.
+
+Continue using the controlled RPC / SECURITY DEFINER architecture.
+
+Do NOT revert to anonymous direct INSERT.
+
+==================================================
+CREATE RPC
+==================================================
+
+Update:
+
+public.create_dating_invitation
+
+so it stores planner_token.
+
+The successful response should return:
+
+{
+  invite_slug,
+  planner_token,
+  status
+}
+
+Do not expose planner_token through the public recipient retrieval RPC.
+
+==================================================
+AFTER CREATION
+==================================================
+
+Kairos should generate TWO URLs:
+
+recipientUrl:
+
+https://<domain>/date/<inviteSlug>
+
+plannerUrl:
+
+https://<domain>/date/manage/<plannerToken>
+
+==================================================
+SHARING
+==================================================
+
+WhatsApp
+Share
+Copy Link
+Copy Message + Link
+
+must ONLY share:
+
+recipientUrl
+
+NEVER share plannerUrl.
+
+==================================================
+PLANNER LINK
+==================================================
+
+After creating the invitation, show a small private section to the planner:
+
+YOUR PRIVATE PLANNER LINK
+
+Keep this link private. It lets you see their reply later.
+
+[ Copy planner link ]
+
+Do not make this overly prominent.
+
+==================================================
+SAVE PLANNER TOKEN LOCALLY
+==================================================
+
+For convenience, store the planner token locally in the planner's browser.
+
+Associate it with the current Dating plan.
+
+Example concept:
+
+kairosDatingPlannerTokens[datingPlanId] = plannerToken
+
+Use localStorage or the existing persistent client storage architecture.
+
+This is for convenience only.
+
+The actual authority is the secure planner_token stored in Supabase.
+
+==================================================
+NO LOGIN
+==================================================
+
+The planner must NOT need:
+
+- email
+- password
+- Google login
+- Supabase Auth account
+
+The private planner token acts as possession-based access.
+
+==================================================
+PLANNER MANAGEMENT ROUTE
+==================================================
+
+Create:
+
+/date/manage/:plannerToken
+
+This page should show:
+
+DATE INVITATION
+
+Status:
+Sent / Accepted / Another time requested
+
+Recipient note
+
+Invitation details
+
+Share again
+
+Copy recipient link
+
+Revoke invitation
+
+Optional:
+Edit/replan
+
+==================================================
+PLANNER STATUS RPC
+==================================================
+
+Create a controlled RPC:
+
+public.get_dating_invitation_for_planner(
+  p_planner_token text
+)
+
+Use SECURITY DEFINER.
+
+It should return ONLY the invitation matching that exact planner token.
+
+Return fields such as:
+
+invite_slug
+title
+date/time information
+status
+recipient_note
+visibility
+public_payload
+created_at
+updated_at
+
+Do NOT return:
+
+planner_token
+
+unless technically required.
+
+Do NOT return other users' invitations.
+
+==================================================
+PLANNER SCREEN INTEGRATION
+==================================================
+
+The existing Dating planner screen should also check whether it has a stored planner_token for the current Dating plan.
+
+If yes:
+
+call:
+
+get_dating_invitation_for_planner(plannerToken)
+
+Then display:
+
+INVITATION STATUS
+
+Example:
+
+✓ I'M UP FOR IT
+
+“7 PM works for me.”
+
+Updated 2 min ago
+
+==================================================
+IF ANOTHER TIME WAS REQUESTED
+==================================================
+
+Show:
+
+ANOTHER TIME REQUESTED
+
+“Saturday evening works better.”
+
+[ Review timing ]
+
+Do not automatically modify the itinerary.
+
+==================================================
+STATUS REFRESH
+==================================================
+
+Refresh planner status when:
+
+- Dating page loads
+- browser regains focus
+- planner presses Refresh
+- optionally every 10–15 seconds while the page is open
+
+Do not require login.
+
+==================================================
+PUBLIC RECIPIENT ROUTE
+==================================================
+
+Keep:
+
+/date/:inviteSlug
+
+Recipient must NOT gain access to planner functionality.
+
+The public page may:
+
+- view invitation
+- respond
+- add recipient note
+
+It must NOT:
+
+- retrieve planner_token
+- edit private plan
+- revoke invitation
+- see planner-only data
+
+==================================================
+RECIPIENT RESPONSE
+==================================================
+
+Keep the existing controlled RPC:
+
+respond_to_dating_invitation(...)
+
+Recipient response should continue updating:
+
+status
+recipient_note
+updated_at
+
+Planner management page reads those values using planner_token.
+
+==================================================
+REVOKE
+==================================================
+
+Planner management page should be able to revoke the invitation.
+
+Do NOT give anonymous users generic UPDATE access.
+
+Create a controlled planner RPC such as:
+
+revoke_dating_invitation(
+  p_planner_token text
+)
+
+Only matching planner_token may revoke that invitation.
+
+==================================================
+OLD INVITATIONS
+==================================================
+
+Existing invitation rows may have:
+
+planner_token = null
+
+Do not break them.
+
+New invitations should always receive planner_token.
+
+Existing invitations can remain recipient-viewable if they currently work.
+
+==================================================
+OPTIONAL FRIENDLY CODE
+==================================================
+
+If desired, Kairos may display a short reference such as:
+
+DATE CODE
+KAI-4827
+
+But this is ONLY a friendly reference.
+
+It must NOT replace the secure planner_token.
+
+==================================================
+ACCEPTANCE TEST
+==================================================
+
+TEST 1
+
+Create a new Dating invitation.
+
+Expected:
+
+Supabase row has:
+
+invite_slug
+planner_token
+
+Both are different secure tokens.
+
+==================================================
+
+TEST 2
+
+Press WhatsApp.
+
+Expected:
+
+ONLY recipient URL is shared.
+
+planner_token must not appear.
+
+==================================================
+
+TEST 3
+
+Recipient opens:
+
+/date/:inviteSlug
+
+Expected:
+
+invitation loads without login.
+
+==================================================
+
+TEST 4
+
+Recipient presses:
+
+I’m up for it
+
+Expected:
+
+status becomes:
+
+sounds_good
+
+==================================================
+
+TEST 5
+
+Planner opens:
+
+/date/manage/:plannerToken
+
+Expected:
+
+planner sees:
+
+✓ I’m up for it
+
+==================================================
+
+TEST 6
+
+Planner closes browser and later opens saved planner link.
+
+Expected:
+
+status still appears.
+
+No login required.
+
+==================================================
+
+TEST 7
+
+Original planner browser opens the same Dating plan.
+
+Expected:
+
+stored planner_token is retrieved locally and the reply appears automatically.
+
+==================================================
+
+TEST 8
+
+Open recipient URL.
+
+Expected:
+
+planner_token is NOT present anywhere in:
+
+page source
+public payload
+URL
+network response
+
+==================================================
+FINAL REQUIREMENT
+==================================================
+
+Please IMPLEMENT the no-login two-link system.
+
+Do not merely explain it.
+
+The final model should be:
+
+PLANNER
+creates invitation
+↓
+recipient link + private planner link
+
+RECIPIENT
+opens recipient link
+↓
+responds
+
+SUPABASE
+stores response
+
+PLANNER
+opens planner link / original Dating plan
+↓
+sees response
+
+No login required.
+
+After implementation report:
+
+1. How invite_slug is generated
+2. How planner_token is generated
+3. Whether both are stored in Supabase
+4. Which RPC creates the invitation
+5. Which RPC retrieves planner status
+6. How planner_token is saved locally
+7. How /date/manage/:plannerToken works
+8. Confirmation WhatsApp only shares recipient URL
+9. Recipient acceptance test result
+10. Planner response-view test result
+11. Confirmation RLS remains enabled
+12. Confirmation planner_token is never exposed to recipient

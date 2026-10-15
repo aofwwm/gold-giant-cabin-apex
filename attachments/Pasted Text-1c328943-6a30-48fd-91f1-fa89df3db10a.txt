@@ -1,0 +1,1147 @@
+Continue implementing ORACLE from the previous instruction.
+
+The previous prompt was truncated around ACCEPTANCE TEST 5.
+
+Do NOT restart the implementation.
+
+Continue from the existing work and incorporate everything below.
+
+==================================================
+ACCEPTANCE TEST 5 — NAVIGATION / NAMING
+==================================================
+
+Navigation:
+
+Expected top-level navigation:
+
+TODAY
+MEET
+MAKAN
+TEAM OUT
+FAMILY
+DATING
+TRAVEL
+ORACLE
+
+The top-level tab must say:
+
+ORACLE
+
+NOT:
+
+神婆
+
+Inside Oracle, the interpretation/personality should say:
+
+神婆 SAYS
+
+Therefore the hierarchy is:
+
+KAIROS
+= product
+
+ORACLE
+= mode
+
+神婆
+= personality / interpreter inside Oracle
+
+Keep the navigation layer English.
+
+==================================================
+VERY IMPORTANT NEW REQUIREMENT:
+DIVINATION TRANSPARENCY
+==================================================
+
+When a user enters Oracle, they should immediately understand:
+
+WHAT DIVINATION SYSTEMS ORACLE USES.
+
+Oracle must NOT look like:
+
+“an LLM pretending to be mystical.”
+
+The product concept is:
+
+DIVINATION ENGINES / RULES / DRAWS
+↓
+STRUCTURED SIGNALS
+↓
+神婆 / LLM INTERPRETATION
+
+Make this visible in the UI.
+
+==================================================
+BEFORE THE USER ASKS A QUESTION
+==================================================
+
+Near the main Oracle input, add a compact section such as:
+
+HOW ORACLE READS THE SIGNS
+
+or:
+
+READING METHODS
+
+Show the divination systems that Oracle supports.
+
+Potential systems:
+
+通胜 · TONG SHU
+
+TAROT
+
+NUMEROLOGY
+
+CHINESE ZODIAC
+
+BAZI · 八字
+
+I CHING · 易经
+
+ASTROLOGY
+
+Do NOT claim a system is working unless it genuinely is.
+
+==================================================
+EACH METHOD NEEDS A REAL STATUS
+==================================================
+
+Use statuses such as:
+
+AVAILABLE
+
+NEEDS INFO
+
+NOT CONNECTED
+
+NOT APPLICABLE
+
+Examples:
+
+TONG SHU
+Available
+
+TAROT
+Available
+
+NUMEROLOGY
+Available
+
+CHINESE ZODIAC
+Needs date of birth
+
+BAZI
+Needs birth date + birth time
+
+I CHING
+Available
+
+ASTROLOGY
+Not connected
+
+These statuses must come from actual implementation state.
+
+Do not fake availability for visual completeness.
+
+==================================================
+SHORT METHOD EXPLANATIONS
+==================================================
+
+Provide a concise explanation for each system.
+
+Examples:
+
+TONG SHU
+Chinese almanac timing and auspiciousness.
+
+TAROT
+A symbolic card draw used for reflection.
+
+NUMEROLOGY
+Date- and number-based patterns.
+
+CHINESE ZODIAC
+Zodiac relationships and timing context.
+
+BAZI
+A personalised Five Elements reading using birth information.
+
+I CHING
+Hexagram-based divination.
+
+ASTROLOGY
+Planetary timing calculated using real astronomical data.
+
+Keep these explanations short.
+
+==================================================
+“HOW THIS WORKS”
+==================================================
+
+Provide an expandable:
+
+[ How this works ]
+
+Explain something like:
+
+“Oracle combines the divination systems relevant to your question, then asks 神婆 to interpret where the signs agree, disagree or remain unclear.”
+
+Also explain:
+
+“Not every reading uses every system.”
+
+Do not create a huge legal/disclaimer section.
+
+Keep it elegant.
+
+==================================================
+DEFAULT METHOD SELECTION
+==================================================
+
+Default should be:
+
+AUTO
+
+Example:
+
+READING METHODS
+
+AUTO
+Kairos will select the methods relevant to your question.
+
+[ View methods ]
+
+The user should NOT need to understand every divination system before asking a question.
+
+==================================================
+OPTIONAL MANUAL METHOD CONTROL
+==================================================
+
+Advanced users may expand:
+
+READING METHODS
+
+and manually include/exclude AVAILABLE systems.
+
+Example:
+
+[x] Tong Shu
+[x] Tarot
+[x] Numerology
+[ ] Chinese Zodiac
+[ ] BaZi
+[x] I Ching
+
+Unavailable methods should not be selectable.
+
+Example:
+
+Astrology
+Not connected
+
+==================================================
+QUESTION-SPECIFIC SELECTION
+==================================================
+
+Do NOT automatically use every available divination system for every question.
+
+Select methods based on relevance.
+
+Examples:
+
+--------------------------------------------------
+QUESTION:
+
+“Is Friday a good day to sign the contract?”
+
+Potential methods:
+
+Tong Shu
+Numerology
+Tarot
+
+Optional:
+BaZi if profile exists and relevant
+
+--------------------------------------------------
+QUESTION:
+
+“Should I take the new job?”
+
+Potential:
+
+Tarot
+Numerology
+BaZi if available
+
+Tong Shu only if timing/date is part of the question.
+
+--------------------------------------------------
+QUESTION:
+
+“What is the energy around this relationship?”
+
+Potential:
+
+Tarot
+Chinese Zodiac
+
+BaZi if sufficient information exists.
+
+--------------------------------------------------
+QUESTION:
+
+“Which weekend is better for travelling?”
+
+Potential:
+
+Tong Shu
+Numerology
+Tarot
+
+Practical weather remains separate and must come from real weather data.
+
+==================================================
+SHOW:
+“USED IN THIS READING”
+==================================================
+
+After a reading is generated, clearly show:
+
+USED IN THIS READING
+
+Example:
+
+✓ TONG SHU
+
+✓ TAROT
+
+✓ NUMEROLOGY
+
+Then show the actual signal from each.
+
+Example:
+
+TONG SHU
+
+Favourable for discussion / initiation
+
+TAROT
+
+Strength · Upright
+
+NUMEROLOGY
+
+Personal Day 6
+
+Then:
+
+神婆 SAYS
+
+“The timing favours opening the conversation, not forcing the answer.”
+
+==================================================
+SHOW WHY A METHOD WAS NOT USED
+==================================================
+
+Where useful, show:
+
+BAZI
+Birth time required
+
+or:
+
+ASTROLOGY
+Not connected
+
+or:
+
+CHINESE ZODIAC
+Not relevant to this reading
+
+Do NOT present an unused system as:
+
+Neutral
+
+because that falsely implies it contributed.
+
+==================================================
+STRUCTURED METHOD RECORD
+==================================================
+
+Each Oracle reading should internally preserve something conceptually like:
+
+{
+  "methodsUsed": [
+    "tong_shu",
+    "tarot",
+    "numerology"
+  ],
+
+  "methodsSkipped": [
+    {
+      "method": "bazi",
+      "reason": "birth_time_missing"
+    },
+    {
+      "method": "astrology",
+      "reason": "not_implemented"
+    }
+  ]
+}
+
+The frontend should render this truthfully.
+
+==================================================
+CRITICAL:
+THE LLM MAY SELECT A METHOD,
+BUT NOT ITS RESULT
+==================================================
+
+Example:
+
+LLM / intent parser may decide:
+
+“This question should use Tarot.”
+
+Then APPLICATION LOGIC performs the Tarot draw.
+
+The LLM must NOT decide:
+
+“The card should be The Star.”
+
+Same principle applies to every method.
+
+==================================================
+TAROT
+==================================================
+
+Use an actual Tarot deck dataset.
+
+The application should generate the card draw.
+
+Store:
+
+card ID
+card name
+orientation
+keywords
+meaning metadata
+
+Example:
+
+{
+  "card": "Strength",
+  "orientation": "upright",
+  "keywords": [
+    "confidence",
+    "restraint",
+    "courage"
+  ]
+}
+
+Then pass this to the LLM.
+
+Once drawn for a reading:
+
+refreshing the page must NOT generate a different card.
+
+Only redraw when the user deliberately creates a new reading / presses Draw Again.
+
+==================================================
+I CHING
+==================================================
+
+If implemented:
+
+generate the hexagram in application logic.
+
+For MVP, a proper simulated three-coin method is acceptable.
+
+Store:
+
+primary hexagram number
+primary hexagram name
+changing lines
+resulting hexagram if applicable
+
+The LLM must not make up the hexagram.
+
+If I Ching is NOT genuinely implemented:
+
+mark it:
+
+Not connected
+
+instead.
+
+==================================================
+NUMEROLOGY
+==================================================
+
+Use deterministic calculation logic.
+
+Document the formulas in code.
+
+Possible calculations:
+
+life path
+personal year
+personal month
+personal day
+
+depending on the information available.
+
+The LLM must not calculate or invent these values itself.
+
+==================================================
+CHINESE ZODIAC
+==================================================
+
+Calculate using the appropriate Chinese lunar-year / Chinese New Year boundary.
+
+Do not simply use Gregorian birth year modulo 12 for people born around Lunar New Year.
+
+If the implementation does not correctly handle the boundary:
+
+do not claim Chinese Zodiac is complete.
+
+==================================================
+BAZI
+==================================================
+
+Do NOT fake BaZi.
+
+Proper BaZi can depend on:
+
+birth date
+birth time
+birth location / timezone
+solar-term boundaries
+Heavenly Stems
+Earthly Branches
+
+If the existing project does not have a reliable calculation engine:
+
+display:
+
+BAZI
+Not connected
+
+or:
+
+BAZI
+Birth information required
+
+Do not ask the LLM to invent a BaZi chart.
+
+==================================================
+ASTROLOGY
+==================================================
+
+Same principle.
+
+Do NOT let the LLM invent:
+
+planet positions
+transits
+houses
+aspects
+
+If there is no proper ephemeris/calculation engine:
+
+ASTROLOGY
+Not connected
+
+==================================================
+TONG SHU
+==================================================
+
+Tong Shu is especially important because it connects strongly to the KAIROS 良辰吉日 identity.
+
+Inspect whether the existing application already has:
+
+cosmic timing
+Tong Shu
+Chinese almanac
+auspicious-date logic
+
+Reuse existing legitimate logic if available.
+
+Structured output could look like:
+
+{
+  "date": "...",
+  "overall": "favourable",
+  "suitableFor": [...],
+  "avoidFor": [...],
+  "dayElement": "...",
+  "zodiacClash": "...",
+  "notes": [...]
+}
+
+The LLM interprets this.
+
+It does not create it.
+
+==================================================
+CONFLICTING DIVINATION SIGNALS
+==================================================
+
+This is important.
+
+Do NOT force all methods to agree.
+
+Example:
+
+THE SIGNS ARE MIXED
+
+TONG SHU
+Favourable
+
+TAROT
+Caution
+
+NUMEROLOGY
+Neutral
+
+Then:
+
+神婆 SAYS
+
+“Not a no. More of a ‘don’t rush just because you’re impatient.’”
+
+Disagreement makes the system feel more genuine and transparent.
+
+==================================================
+OVERALL RESULT
+==================================================
+
+Use qualitative interpretation rather than fake numerical precision.
+
+Possible:
+
+FAVOURABLE
+
+FAVOURABLE WITH CAUTION
+
+MIXED
+
+NEUTRAL
+
+BETTER TO WAIT
+
+UNCLEAR
+
+Do NOT create:
+
+Oracle Score 93/100
+
+Do NOT say:
+
+83% chance of success
+
+Divination is not a probability model.
+
+==================================================
+ORACLE RESULT LAYOUT
+==================================================
+
+Suggested mobile structure:
+
+ORACLE
+
+QUESTION
+“Should I talk to my boss tomorrow?”
+
+USED IN THIS READING
+
+Tong Shu · Tarot · Numerology
+
+------------------------------
+
+神婆 SAYS
+
+“The timing favours opening the conversation, not forcing the answer.”
+
+------------------------------
+
+OVERALL ENERGY
+
+FAVOURABLE WITH PATIENCE
+
+------------------------------
+
+THE SIGNS
+
+TONG SHU
+Favourable
+
+TAROT
+Strength · Upright
+
+NUMEROLOGY
+Personal Day 6
+
+------------------------------
+
+PAY ATTENTION TO
+
+Timing
+Tone
+Expectations
+
+------------------------------
+
+[ Why? ]
+
+==================================================
+CRYSTAL BALL
+==================================================
+
+Keep the Oracle crystal-ball visual concept.
+
+However:
+
+do NOT make the crystal ball purely decorative.
+
+It should frame the Oracle interaction.
+
+Use:
+
+subtle translucent glass
+violet / blue refraction
+faint internal movement
+soft silver highlight
+restrained glow
+
+Avoid:
+
+heavy smoke
+Halloween visuals
+neon purple
+constant particle explosions
+cartoon fortune-teller imagery
+
+==================================================
+神婆 VOICE
+==================================================
+
+Use:
+
+神婆 SAYS
+
+inside Oracle.
+
+Tone:
+
+observant
+slightly mischievous
+warm
+concise
+confident without certainty
+
+Examples:
+
+“Three systems agree. That doesn’t happen often.”
+
+“Interesting. The signs favour movement, but not speed.”
+
+“Good timing. Questionable expectations.”
+
+“You already know which option you prefer. The cards are merely being nosy.”
+
+“Possible? Yes. Effortless? The universe declined to comment.”
+
+Do not use:
+
+“You are destined to…”
+
+“This will definitely happen.”
+
+“The universe guarantees…”
+
+==================================================
+HIGH-STAKES QUESTIONS
+==================================================
+
+Oracle may be used for reflection.
+
+It must not use divination as factual evidence for:
+
+medical diagnosis
+financial guarantees
+legal outcomes
+dangerous decisions
+
+Examples:
+
+“Do I have cancer?”
+
+Do NOT perform a divination diagnosis.
+
+“Will this stock definitely double?”
+
+Do NOT present Tarot / Tong Shu as investment prediction.
+
+Oracle can remain reflective but must not claim certainty.
+
+==================================================
+PICK A DATE
+==================================================
+
+Oracle should strongly support:
+
+PICK A DATE
+
+Example:
+
+“Which day next week is good for launching?”
+
+User provides:
+
+date range
+
+Oracle evaluates relevant implemented timing systems.
+
+Then presents the strongest dates.
+
+This is especially aligned with Kairos.
+
+Do not automatically add the chosen date to the schedule.
+
+Offer:
+
+[ Plan this date ]
+
+or:
+
+[ Add to Today ]
+
+The user decides.
+
+==================================================
+COMPARE TWO CHOICES
+==================================================
+
+Also support:
+
+COMPARE TWO CHOICES
+
+Example:
+
+Job A
+
+vs
+
+Job B
+
+Do not necessarily declare a winner.
+
+Instead show different signals/trade-offs.
+
+Example:
+
+OPTION A
+
+Movement
+Growth
+Higher uncertainty
+
+OPTION B
+
+Stability
+Better timing
+Lower novelty
+
+神婆 SAYS
+
+“One looks exciting. One looks sustainable. Unfortunately those are not always the same thing.”
+
+==================================================
+TODAY INTEGRATION
+==================================================
+
+Oracle readings do NOT automatically appear in Today.
+
+Only an actionable date explicitly selected by the user can be added.
+
+Example:
+
+[ Add to Today ]
+
+or:
+
+[ Plan this date ]
+
+Never automatically schedule mystical recommendations.
+
+==================================================
+ORACLE DATA / PRIVACY
+==================================================
+
+Do not automatically save every Oracle question permanently.
+
+Some questions may be highly personal.
+
+If implementing history:
+
+provide an explicit:
+
+[ Save Reading ]
+
+option.
+
+Birth information must not appear in public sharing payloads.
+
+==================================================
+SHARING
+==================================================
+
+If Oracle readings can be shared:
+
+use a privacy-aware no-login architecture consistent with Kairos.
+
+Do not automatically expose:
+
+birth date
+birth time
+birth place
+private profile information
+
+==================================================
+FINAL ACCEPTANCE TESTS
+==================================================
+
+TEST 1
+
+Open ORACLE.
+
+Expected:
+
+The user can immediately understand which divination systems are available.
+
+--------------------------------------------------
+
+TEST 2
+
+Ask:
+
+“Is tomorrow a good day to talk to my boss about promotion?”
+
+Expected:
+
+Oracle selects relevant implemented systems.
+
+USED IN THIS READING displays those systems.
+
+No fake divination output.
+
+--------------------------------------------------
+
+TEST 3
+
+Ask:
+
+“What is the energy around this relationship?”
+
+Expected:
+
+Appropriate methods are selected.
+
+Tong Shu should NOT automatically appear unless timing is relevant.
+
+--------------------------------------------------
+
+TEST 4
+
+BaZi engine is unavailable.
+
+Expected:
+
+BAZI
+Not connected
+
+NOT a fake BaZi interpretation.
+
+--------------------------------------------------
+
+TEST 5
+
+Astrology is unavailable.
+
+Expected:
+
+ASTROLOGY
+Not connected
+
+No invented planets/transits.
+
+--------------------------------------------------
+
+TEST 6
+
+Two systems disagree.
+
+Expected:
+
+Oracle displays the disagreement honestly.
+
+--------------------------------------------------
+
+TEST 7
+
+Refresh a completed Tarot reading.
+
+Expected:
+
+The same Tarot card remains.
+
+The system does NOT redraw silently.
+
+--------------------------------------------------
+
+TEST 8
+
+Navigation.
+
+Expected:
+
+ORACLE
+
+NOT:
+
+神婆
+
+Inside Oracle:
+
+神婆 SAYS
+
+--------------------------------------------------
+
+TEST 9
+
+Question:
+
+“Will this stock definitely double?”
+
+Expected:
+
+Oracle does not represent divination as reliable investment prediction.
+
+--------------------------------------------------
+
+TEST 10
+
+Question:
+
+“Do I have cancer?”
+
+Expected:
+
+Oracle does not perform a divination diagnosis.
+
+==================================================
+FINAL DESIGN PRINCIPLE
+==================================================
+
+Lock this hierarchy:
+
+KAIROS
+= PRODUCT
+
+ORACLE
+= MODE
+
+神婆
+= PERSONALITY
+
+And lock this architecture:
+
+QUESTION
+↓
+RELEVANT DIVINATION METHODS SELECTED
+↓
+REAL RULES / CALCULATIONS / DRAWS
+↓
+STRUCTURED SIGNALS
+↓
+LLM SYNTHESIS
+↓
+神婆 SAYS
+↓
+USER MAKES THE DECISION
+
+NOT:
+
+QUESTION
+↓
+LLM INVENTS A MYSTICAL ANSWER
+
+==================================================
+IMPLEMENTATION REQUEST
+==================================================
+
+Please IMPLEMENT all of this in the existing Kairos application.
+
+Do not merely describe what you would build.
+
+Before changing code:
+
+1. Inspect the existing Oracle work already created from my previous prompt.
+2. Inspect existing Kairos mode/theme architecture.
+3. Inspect Kairos Voice.
+4. Inspect existing Tong Shu / cosmic / auspicious timing logic.
+5. Determine which divination engines are genuinely working.
+6. Do NOT replace working implementation unnecessarily.
+
+==================================================
+WHEN FINISHED, REPORT:
+==================================================
+
+1. Files changed
+
+2. Oracle theme implementation
+
+3. Which divination methods are genuinely operational
+
+4. Which methods require additional user information
+
+5. Which methods are NOT connected
+
+6. How Oracle selects methods for each question
+
+7. How Tarot draws are generated and persisted
+
+8. How Tong Shu signals are generated
+
+9. How numerology is calculated
+
+10. Whether Chinese Zodiac handles Lunar New Year boundaries correctly
+
+11. Whether BaZi is genuinely calculated or currently unavailable
+
+12. Whether I Ching is genuinely implemented
+
+13. Whether Astrology uses a real calculation engine
+
+14. How methodsUsed / methodsSkipped are represented
+
+15. How structured divination results are passed to the LLM
+
+16. Confirmation that the LLM cannot choose/invent the underlying divination outcome
+
+17. How conflicting divination signals are displayed
+
+18. Confirmation that top navigation says ORACLE
+
+19. Confirmation that 神婆 SAYS appears only inside Oracle
+
+20. Results of all acceptance tests above
+
+Do not just say:
+
+“Implemented successfully.”
+
+Give me the actual implementation findings and test results.

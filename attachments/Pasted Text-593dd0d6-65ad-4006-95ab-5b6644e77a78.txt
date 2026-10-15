@@ -1,0 +1,408 @@
+Please FIX two important bugs in the existing KAIROS Travel mode.
+
+Do NOT redesign Travel.
+Do NOT change the Travel ochre/sand theme.
+Do NOT rebuild the app.
+
+CURRENT BUGS:
+
+1. GLOBAL DESTINATION SEARCH IS WRONG
+
+When I type:
+
+Japan
+
+Kairos returns local Singapore POIs such as:
+
+- Japanese Garden
+- Japanese Cemetery Park
+- Japanese Garden Road
+- Japanese Garden Bridge
+- Japan Home
+
+This is wrong.
+
+Travel destinations must support GLOBAL:
+
+- countries
+- cities
+- regions
+- islands
+- major travel destinations
+
+Travel must NOT reuse the Singapore-biased local POI search logic used by Makan / Family / Dating.
+
+==================================================
+BUG 1 — CREATE A SEPARATE GLOBAL DESTINATION SEARCH
+==================================================
+
+Travel needs its own destination resolver.
+
+Do NOT change the existing local place search used elsewhere.
+
+Create a separate service/function such as:
+
+searchTravelDestinations()
+
+The Travel destination field should search globally.
+
+Examples:
+
+Japan
+
+should prioritise:
+
+Japan
+Country
+
+and potentially useful destination suggestions such as:
+
+Tokyo, Japan
+Osaka, Japan
+Kyoto, Japan
+Hokkaido, Japan
+
+but NOT:
+
+Japanese Garden, Singapore
+
+==================================================
+DESTINATION SEARCH TYPES
+==================================================
+
+Prioritise these geographic types:
+
+1. Country
+2. City
+3. Administrative region / state / prefecture
+4. Island / major geographic region
+5. Recognised tourism destination
+
+Deprioritise or exclude:
+
+- shops
+- restaurants
+- roads
+- individual buildings
+- local businesses
+- Singapore POIs
+
+from the TOP-LEVEL Travel destination field.
+
+==================================================
+GLOBAL GEOCODING
+==================================================
+
+Reuse an existing open geocoder if appropriate, but:
+
+REMOVE the Singapore geographic bias for Travel.
+
+If the existing app uses Photon / OpenStreetMap:
+
+that is fine, but Travel queries must be global.
+
+Do not pass:
+
+Singapore-biased bounds
+Singapore lat/lng proximity
+Singapore-only country filters
+
+for Travel destination searches.
+
+==================================================
+SEARCH RESULT UI
+==================================================
+
+Show clear geographic result types.
+
+Example:
+
+Japan
+Country
+
+Osaka
+Osaka Prefecture, Japan
+City
+
+Hokkaido
+Japan
+Region
+
+Tokyo
+Japan
+City
+
+The user must explicitly select a result.
+
+Do not automatically select a fuzzy match.
+
+==================================================
+SELECTED TRAVEL DESTINATION OBJECT
+==================================================
+
+Once selected, store a proper structured object:
+
+{
+  "name": "Japan",
+  "displayName": "Japan",
+  "type": "country",
+  "country": "Japan",
+  "countryCode": "JP",
+  "latitude": ...,
+  "longitude": ...,
+  "provider": "...",
+  "providerId": "..."
+}
+
+For a city:
+
+{
+  "name": "Osaka",
+  "displayName": "Osaka, Japan",
+  "type": "city",
+  "country": "Japan",
+  "countryCode": "JP",
+  "latitude": ...,
+  "longitude": ...,
+  "provider": "...",
+  "providerId": "..."
+}
+
+Do not store only the search text.
+
+==================================================
+MULTI-DESTINATION TRIPS
+==================================================
+
+Travel should eventually support:
+
+Japan
+↓
+Osaka
+↓
+Nagoya
+
+or:
+
+Osaka + Kyoto + Nagoya
+
+For now, preserve the existing functionality, but structure destination data so multiple destinations can be supported.
+
+Do not force the user to select a street address.
+
+==================================================
+TEST GLOBAL DESTINATION SEARCH
+==================================================
+
+Test these exact inputs:
+
+Japan
+Seoul
+Taiwan
+Hokkaido
+Paris
+New York
+Bangkok
+Chengdu
+Osaka
+Hong Kong
+
+Expected:
+
+appropriate GLOBAL geographic destinations.
+
+FAIL if:
+
+search results are mostly Singapore businesses/roads/POIs.
+
+==================================================
+BUG 2 — NIGHTS AND ADULTS INPUTS ARE BROKEN
+==================================================
+
+The Travel form numeric fields do not reflect what I enter.
+
+Current behaviour:
+
+Nights always becomes:
+
+7
+
+regardless of what I type.
+
+Adults always becomes:
+
+8
+
+regardless of what I type.
+
+This is a state-management bug.
+
+Please inspect the existing component rather than simply changing the default numbers.
+
+==================================================
+FIND THE STATE BUG
+==================================================
+
+Inspect:
+
+- value props
+- onChange handlers
+- default values
+- useState
+- useEffect
+- trip draft object
+- LLM parsed trip data
+- state hydration
+- Supabase-loaded values
+
+Specifically determine whether:
+
+Nights is bound to the wrong field.
+
+Adults is bound to the wrong field.
+
+A useEffect is continuously overwriting user input.
+
+LLM parsed values are overwriting manual edits.
+
+Defaults are being reapplied after every render.
+
+Form fields are using:
+
+value={something || default}
+
+incorrectly.
+
+Or state keys are accidentally mapped to:
+
+trip duration
+child age
+group size
+etc.
+
+==================================================
+MANUAL INPUT MUST WIN
+==================================================
+
+Once the user manually changes a field:
+
+their manual value must remain.
+
+Example:
+
+Nights:
+
+User enters:
+10
+
+UI must show:
+10
+
+Trip state must contain:
+nights: 10
+
+It must NOT reset to:
+7
+
+Adults:
+
+User enters:
+2
+
+UI must show:
+2
+
+Trip state must contain:
+adults: 2
+
+It must NOT reset to:
+8
+
+==================================================
+DO NOT CONTINUOUSLY REAPPLY LLM VALUES
+==================================================
+
+If the natural-language trip brief initially produces:
+
+{
+  "nights": 7,
+  "adults": 2
+}
+
+that should initialise the form ONCE.
+
+After the user edits:
+
+nights = 10
+
+the LLM-derived value must NOT overwrite it on the next render.
+
+Use a clear precedence model:
+
+1. Manual user edit
+2. Saved trip value
+3. Parsed trip brief
+4. Default
+
+Manual user edits have highest priority.
+
+==================================================
+IMPROVE NIGHTS INPUT
+==================================================
+
+Keep Nights editable.
+
+Suggested UI:
+
+Nights
+
+[ − ]   7   [ + ]
+
+but also allow tapping/editing the number directly if practical.
+
+Validation:
+
+minimum:
+1
+
+reasonable maximum:
+for example 90
+
+Do not silently change a valid value.
+
+If user enters an invalid value, show validation rather than resetting unexpectedly.
+
+==================================================
+OPTIONAL BETTER DATE LOGIC
+==================================================
+
+Travel currently has:
+
+Start
++
+Nights
+
+This is acceptable.
+
+When Start and Nights are known, derive:
+
+endDate
+
+deterministically.
+
+Example:
+
+Start:
+20 Dec 2026
+
+Nights:
+7
+
+Derived checkout/end date:
+27 Dec 2026
+
+If Nights changes to:
+
+10
+
+end date becomes

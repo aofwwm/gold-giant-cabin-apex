@@ -1,0 +1,848 @@
+CRITICAL BUG — ITINERARY PHOTOS ONLY APPEAR AFTER CLICKING THE PLACE
+
+I now have a reproducible Travel photo bug.
+
+DO NOT redesign the photo architecture again.
+
+DO NOT add new photo providers.
+
+DO NOT change the TravelPlaybook planner.
+
+Find and fix the ACTUAL implementation bug.
+
+==================================================
+EXACT REPRODUCTION
+==================================================
+
+Current Hakone itinerary:
+
+A newly generated itinerary initially shows:
+
+Lake Ashi
+芦ノ湖
+Viewpoint · 1 hr 20 min
+
+BUT there is NO thumbnail/photo on the itinerary card.
+
+Then I click/open Lake Ashi.
+
+After that:
+
+the exact same itinerary card suddenly displays a proper Lake Ashi
+photo.
+
+Therefore:
+
+THE PHOTO EXISTS.
+
+THE PHOTO PROVIDER CAN FIND IT.
+
+THE FRONTEND CAN DISPLAY IT.
+
+The bug is that photo resolution / canonical-place hydration /
+state propagation is happening only when Place Detail is opened.
+
+Fix this exact behaviour.
+
+==================================================
+EXPECTED BEHAVIOUR
+==================================================
+
+After the CORE itinerary is ready:
+
+1. render itinerary immediately
+
+2. collect all scheduled canonical places
+
+3. check cached photos
+
+4. resolve missing scheduled-place photos automatically
+
+5. update itinerary cards as each photo becomes available
+
+6. user does NOT need to click/open any place
+
+Place Detail opening must be irrelevant to whether the card gets
+a photo.
+
+==================================================
+FIRST: DETERMINE WHICH FAILURE THIS IS
+==================================================
+
+Do not guess.
+
+Reproduce:
+
+Generate Tokyo/Hakone itinerary.
+
+Do NOT click Lake Ashi.
+
+Inspect:
+
+- photo state
+- canonical place state
+- network calls
+- cache
+- component props
+
+Then click Lake Ashi.
+
+Inspect what changes.
+
+Report whether the problem is:
+
+A. PHOTO REQUEST NOT STARTED UNTIL PLACE DETAIL OPENS
+
+B. PHOTO REQUEST ALREADY COMPLETES BUT ITINERARY CARD DOES NOT
+   RE-RENDER
+
+C. PLACE DETAIL HYDRATES A RICHER CANONICAL PLACE OBJECT AND THE
+   ITINERARY STILL HOLDS A THIN COPY
+
+D. PHOTO CACHE IS WRITTEN BUT QUERY/STORE INVALIDATION DOES NOT
+   OCCUR
+
+E. PHOTO CACHE KEY MISMATCH
+
+F. React memo/stale closure prevents itinerary update
+
+G. server response strips photo data from scheduled places
+
+H. some other issue
+
+Tell me the actual cause.
+
+==================================================
+TRACE LAKE ASHI
+==================================================
+
+Add temporary dev logging.
+
+Before opening Place Detail:
+
+[PHOTO DEBUG]
+
+place:
+Lake Ashi
+
+scheduledPlaceId:
+...
+
+canonicalPlaceId:
+...
+
+provider:
+...
+
+wikidataId:
+...
+
+photoCacheKey:
+...
+
+photoCacheStatus:
+MISS / PENDING / READY / FAILED
+
+photoUrl:
+...
+
+photoResolutionStarted:
+YES / NO
+
+itineraryCardPhoto:
+...
+
+Then open Lake Ashi.
+
+Log the same values again.
+
+I want to see exactly what action caused the image to become
+available.
+
+==================================================
+CHECK NETWORK BEFORE CLICK
+==================================================
+
+Generate itinerary.
+
+Do NOT touch Lake Ashi.
+
+Check whether any request occurs to:
+
+Wikidata
+
+Wikimedia API
+
+upload.wikimedia.org
+
+photo resolver
+
+internal photo endpoint
+
+If NO photo-resolution request occurs:
+
+the prefetch mechanism is not running.
+
+Fix that.
+
+==================================================
+CHECK NETWORK AFTER CLICK
+==================================================
+
+Then click Lake Ashi.
+
+If the Wikimedia/photo request fires only at this point:
+
+Place Detail is incorrectly responsible for enrichment.
+
+Move that responsibility out of Place Detail.
+
+==================================================
+PLACE DETAIL MUST NOT OWN PHOTO RESOLUTION
+==================================================
+
+Place Detail may CONSUME:
+
+canonicalPlace.photo
+
+or:
+
+photoCache(placeId)
+
+but it should not be the only component responsible for making
+that photo exist.
+
+Photo enrichment belongs at:
+
+TRAVEL SCHEDULED-PLACE ENRICHMENT LEVEL
+
+not:
+
+PLACE DETAIL MOUNT.
+
+==================================================
+SCHEDULED PLACE PHOTO PREFETCH
+==================================================
+
+When:
+
+corePlan.status === READY
+
+run something conceptually like:
+
+scheduledPlaceIds =
+  itinerary.days
+    .flatMap(day => day.stops)
+    .filter(stop => stop.canonicalPlaceId)
+    .map(stop => stop.canonicalPlaceId)
+
+deduplicate
+
+Then:
+
+prefetchTravelPlacePhotos(scheduledPlaceIds)
+
+Use the actual existing architecture rather than duplicating it.
+
+==================================================
+PRIORITY ORDER
+==================================================
+
+Use:
+
+PRIORITY 1
+Places visible in current/first expanded day
+
+PRIORITY 2
+All other scheduled itinerary stops
+
+PRIORITY 3
+Visible Discover places
+
+PRIORITY 4
+Remaining Discover candidates
+
+This means the user gets useful visible photos quickly.
+
+==================================================
+DO NOT BLOCK THE CORE ITINERARY
+==================================================
+
+IMPORTANT:
+
+Do NOT do:
+
+await prefetchAllPhotos()
+return itinerary
+
+The correct behaviour is:
+
+core itinerary
+→ render
+
+then:
+
+scheduled photos
+→ progressively resolve
+
+First-plan latency must NOT increase materially.
+
+==================================================
+CANONICAL PLACE STORE
+==================================================
+
+Audit whether itinerary stops currently contain COPIES of place data.
+
+Example problem:
+
+itineraryStop = {
+  name: "Lake Ashi",
+  photo: null
+}
+
+Then Place Detail loads:
+
+canonicalPlace = {
+  name: "Lake Ashi",
+  photo: "..."
+}
+
+but the itineraryStop copy remains:
+
+photo: null.
+
+If this is the problem:
+
+fix the data flow.
+
+==================================================
+SINGLE SOURCE OF TRUTH
+==================================================
+
+Prefer:
+
+ItineraryStop {
+  canonicalPlaceId,
+  timing,
+  planning metadata
+}
+
+Then UI resolves:
+
+canonicalPlaceById[canonicalPlaceId]
+
+for:
+
+name
+local name
+photo
+description
+etc.
+
+Do not create multiple disconnected copies of the same canonical
+place if avoidable.
+
+==================================================
+IF COPIES MUST REMAIN
+==================================================
+
+If architecture requires denormalised copies:
+
+photo enrichment must update/invalidate all relevant consumers.
+
+Do not rely on closing/reopening components.
+
+==================================================
+QUERY CACHE
+==================================================
+
+If using:
+
+React Query
+SWR
+custom cache
+context store
+Zustand
+etc.
+
+check whether:
+
+photo is written
+
+but:
+
+itinerary query is never invalidated/notified.
+
+Ensure photo-cache completion triggers reactive update.
+
+==================================================
+CACHE KEY CONSISTENCY
+==================================================
+
+This is especially important because Travel now has:
+
+PlaybookAnchor IDs
+
+canonical Place IDs
+
+Wikidata IDs
+
+OSM IDs
+
+provider IDs.
+
+Verify that:
+
+Lake Ashi card
+
+and:
+
+Lake Ashi Place Detail
+
+use the SAME canonical identity when reading/writing photo data.
+
+Potential bad case:
+
+itinerary card:
+anchor:tokyo:lake-ashi
+
+Place Detail:
+wikidata:Qxxxx
+
+photo cache:
+Qxxxx
+
+Therefore card never sees cache until hydration.
+
+Create a single canonical photo-cache key.
+
+==================================================
+PLAYBOOK ANCHORS
+==================================================
+
+Recent Travel changes introduced:
+
+PlaybookAnchor.
+
+Audit whether anchor-backed stops are missing canonical photo
+metadata until Place Detail is opened.
+
+A PlaybookAnchor should resolve to the canonical Place before or
+immediately after scheduling.
+
+Do not leave it as an isolated lightweight object forever.
+
+==================================================
+REACT MEMO / STATE
+==================================================
+
+Check whether itinerary cards are:
+
+memo()
+
+useMemo()
+
+or use stale derived state.
+
+Example:
+
+const [photo, setPhoto] = useState(place.photo)
+
+This is dangerous if place.photo arrives later and local state is
+never synchronised.
+
+Prefer deriving from reactive canonical store/cache.
+
+==================================================
+PLACE DETAIL SIDE EFFECT
+==================================================
+
+Search the Place Detail component for functions such as:
+
+loadPlaceDetails()
+
+ensurePlacePhoto()
+
+enrichPlace()
+
+hydratePlace()
+
+resolvePhoto()
+
+fetchWikipedia()
+
+fetchWikidata()
+
+Anything triggered from:
+
+useEffect(() => ..., [open])
+
+may explain why opening Place Detail fixes the photo.
+
+Move reusable enrichment to the correct shared service.
+
+Place Detail may still request ADDITIONAL gallery images if desired,
+but the primary thumbnail must already be resolved independently.
+
+==================================================
+PHOTO PREFETCH SHOULD NOT MEAN FULL PLACE ENRICHMENT
+==================================================
+
+For itinerary cards we initially need only:
+
+primary photo thumbnail
+
+source/license metadata required for compliance
+
+Do NOT require:
+
+full description
+
+gallery
+
+Google links
+
+reviews
+
+all Wikidata properties
+
+before showing the thumbnail.
+
+Keep prefetch lightweight.
+
+==================================================
+BOUND CONCURRENCY
+==================================================
+
+Scheduled-photo enrichment should use bounded concurrency.
+
+Do NOT launch 50 Wikimedia requests simultaneously.
+
+Use the existing provider limit if one exists.
+
+If none exists:
+
+implement a small bounded worker pool.
+
+Choose a sensible number based on provider behaviour.
+
+==================================================
+FAILURE IS PER PLACE
+==================================================
+
+If Hakone Shrine has no photo:
+
+Lake Ashi must still get its photo.
+
+Use:
+
+Promise.allSettled
+
+or equivalent isolated handling.
+
+Do not let one failure abort the entire batch.
+
+==================================================
+PHOTO STATUS MODEL
+==================================================
+
+Track something like:
+
+UNRESOLVED
+
+LOADING
+
+READY
+
+UNAVAILABLE
+
+ERROR
+
+Do not treat:
+
+UNRESOLVED
+
+as:
+
+NO PHOTO EXISTS.
+
+This distinction matters.
+
+==================================================
+CURRENT UI BUG
+==================================================
+
+Right now the initial itinerary visually behaves as though:
+
+UNRESOLVED = NO PHOTO
+
+Then after click:
+
+READY = SHOW PHOTO
+
+Fix that.
+
+For unresolved state:
+
+show a neutral skeleton/placeholder.
+
+Only show a genuine no-photo state after resolution has completed
+and no permitted source exists.
+
+==================================================
+ITINERARY CARD
+==================================================
+
+Initial:
+
+[photo skeleton]
+Lake Ashi
+芦ノ湖
+
+Then automatically:
+
+[Lake Ashi photo]
+Lake Ashi
+芦ノ湖
+
+No click required.
+
+==================================================
+ABOVE-THE-FOLD PRIORITY
+==================================================
+
+On mobile, photo enrichment should prioritise cards the user is
+likely to see first.
+
+Do not spend the first several seconds resolving Day 7 photos while
+Day 1 is visible and blank.
+
+An exact viewport observer is optional.
+
+A simpler priority such as:
+
+expanded/current day first
+
+is sufficient initially.
+
+==================================================
+COLLAPSED DAYS
+==================================================
+
+Do not eagerly download every full image for collapsed days.
+
+It is acceptable to:
+
+resolve metadata/cache progressively
+
+and defer actual image loading until cards become visible.
+
+==================================================
+PERSISTENT CACHE
+==================================================
+
+Where permitted by the image/source terms:
+
+persist resolved primary-photo metadata.
+
+Example:
+
+canonicalPlaceId
+file title
+thumbnail URL
+source
+licence
+creator
+lastResolved
+
+Then the next Tokyo trip can show photos much faster.
+
+Respect source requirements.
+
+==================================================
+DO NOT CALL GEMINI
+==================================================
+
+This entire photo fix requires:
+
+0 Gemini calls.
+
+==================================================
+REGRESSION TEST 1 — LAKE ASHI
+==================================================
+
+Generate the same Hakone itinerary.
+
+Do NOT click Lake Ashi.
+
+Expected:
+
+core itinerary appears
+
+then Lake Ashi photo appears automatically.
+
+PASS only if opening Place Detail is unnecessary.
+
+==================================================
+REGRESSION TEST 2 — MEIJI JINGU
+==================================================
+
+Generate Tokyo itinerary.
+
+Do not open any cards.
+
+Expected:
+
+Meiji Jingu thumbnail resolves automatically if an eligible photo
+exists.
+
+==================================================
+REGRESSION TEST 3 — TOKYO TOWER
+==================================================
+
+Same behaviour.
+
+==================================================
+REGRESSION TEST 4 — NO-PHOTO PLACE
+==================================================
+
+Use one genuinely photo-less place.
+
+Expected:
+
+skeleton while resolving
+
+then tasteful no-photo state only AFTER provider resolution
+completes.
+
+==================================================
+REGRESSION TEST 5 — CACHE
+==================================================
+
+Generate Tokyo itinerary once.
+
+Photos resolve.
+
+Reload/reopen same trip.
+
+Expected:
+
+cached photo metadata appears significantly faster and does not
+require opening Place Detail.
+
+==================================================
+REGRESSION TEST 6 — FAILED PHOTO PROVIDER
+==================================================
+
+Simulate Wikimedia failure.
+
+Expected:
+
+itinerary still works
+
+photo placeholders fail independently
+
+no whole-trip failure
+
+no infinite retries.
+
+==================================================
+PERFORMANCE CHECK
+==================================================
+
+Measure:
+
+time to first useful itinerary BEFORE fix
+
+time to first useful itinerary AFTER fix
+
+They should remain approximately the same.
+
+Then measure:
+
+time until first visible scheduled thumbnail
+
+time until all scheduled thumbnail metadata resolves.
+
+==================================================
+VERY IMPORTANT
+==================================================
+
+Do NOT "fix" this by waiting for every photo before returning the
+Travel plan.
+
+I want:
+
+FAST CORE PLAN
+
++
+
+PROGRESSIVE AUTOMATIC PHOTOS.
+
+==================================================
+FINAL REPORT
+==================================================
+
+After implementation report:
+
+1. Exact root cause
+
+2. Whether photo requests existed before clicking
+
+3. What opening Place Detail previously triggered
+
+4. Whether scheduled stops and Place Detail used different place
+   identities
+
+5. Whether stale/copied place state was involved
+
+6. Whether query/store invalidation was involved
+
+7. Files changed
+
+8. New scheduled-photo prefetch flow
+
+9. Canonical photo cache key
+
+10. Concurrency behaviour
+
+11. Card reactive-update behaviour
+
+12. Meaning of UNRESOLVED vs UNAVAILABLE
+
+13. Lake Ashi no-click test result
+
+14. Meiji Jingu no-click test result
+
+15. Tokyo Tower no-click test result
+
+16. Cache/reload test result
+
+17. Provider-failure test result
+
+18. Time-to-first-plan before/after
+
+19. Time-to-first-thumbnail
+
+20. Gemini calls
+
+Expected:
+0
+
+DO ACTUAL IMPLEMENTATION.
+
+DO NOT simply change the placeholder.
+
+DO NOT make Place Detail responsible for primary photo retrieval.
+
+The exact required behaviour is:
+
+PLAN APPEARS
+↓
+SCHEDULED PHOTOS RESOLVE AUTOMATICALLY
+↓
+ITINERARY CARDS UPDATE THEMSELVES
+↓
+USER MAY NEVER OPEN PLACE DETAIL
+↓
+PHOTOS STILL APPEAR.

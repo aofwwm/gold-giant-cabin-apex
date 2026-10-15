@@ -1,0 +1,1392 @@
+Please UPGRADE the KAIROS TRAVEL mobile itinerary UX and the underlying itinerary logic.
+
+IMPORTANT:
+
+Do NOT redesign Travel from scratch.
+
+Inspect the existing implementation first.
+
+Preserve:
+
+- Travel V3
+- destination profiles
+- itinerary generation
+- routing/navigation handoff
+- Discover
+- Map
+- hotel/base logic
+- translation layer
+- place photos
+- external links
+- free-first architecture
+- existing desktop functionality that is working
+
+I am testing on MOBILE and there are several significant UX / planning problems.
+
+==================================================
+CURRENT TEST
+==================================================
+
+Tokyo trip.
+
+On mobile I currently see something like:
+
+DAY 1
+
+Mandarin Oriental Tokyo
+Base
+
+↓ BEST WAY
+Taxi · 65 min
+Cuts walking from 766 min to 65 min
+
+Kamakura
+鎌倉市
+Attraction · 1 hr 30 min
+
+FREE TIME
+11:55 AM–6:30 PM · 6 hr 35 min
+
+Find something nearby
+
+DAY 2
+Tokyo
+
+etc.
+
+There are multiple issues.
+
+==================================================
+PROBLEM 1
+DAY 1 AND DAY 2 VISUALLY RUN TOGETHER
+==================================================
+
+The current itinerary is one extremely long vertical stream.
+
+It is difficult to immediately tell:
+
+where Day 1 ends
+
+where Day 2 begins
+
+which transport belongs to which day
+
+how much content each day contains
+
+This is especially bad on mobile.
+
+==================================================
+NEW DAY CONTAINER
+==================================================
+
+Each itinerary day should become a visually distinct DAY CARD / DAY SECTION.
+
+Conceptually:
+
+╭──────────────────────────────╮
+│ DAY 1 · THU, 22 OCT          │
+│ TOKYO → KAMAKURA             │
+│ 4 stops · 7 hr 20 min        │
+│                         [⌃]   │
+├──────────────────────────────┤
+│ 09:00 Hotel                  │
+│ ↓ Train · 58 min             │
+│ 10:15 Great Buddha           │
+│ ...                          │
+╰──────────────────────────────╯
+
+SPACE
+
+╭──────────────────────────────╮
+│ DAY 2 · FRI, 23 OCT          │
+│ CENTRAL TOKYO                │
+│ 5 stops · 8 hr               │
+│                         [⌄]   │
+╰──────────────────────────────╯
+
+Use the existing Kairos visual design system.
+
+Do NOT literally copy this ASCII layout.
+
+==================================================
+STRONGER DAY SEPARATION
+==================================================
+
+Each new day needs:
+
+clear top spacing
+
+clear day heading
+
+optional subtle background/border treatment
+
+day summary
+
+collapse control
+
+The next day's heading must never visually look like it belongs to the transport leg above it.
+
+==================================================
+STICKY DAY HEADER
+==================================================
+
+On mobile strongly consider making the current Day header briefly sticky while scrolling inside that day.
+
+Example:
+
+DAY 3 · KAMAKURA
+
+This helps users understand where they are in a long itinerary.
+
+Do not consume excessive screen space.
+
+==================================================
+PROBLEM 2
+COLLAPSE / EXPAND DAYS
+==================================================
+
+Add collapse functionality to every day.
+
+Default behaviour:
+
+TODAY / currently edited day:
+expanded
+
+other days:
+may remain expanded initially
+
+but user can collapse individually.
+
+Collapsed state:
+
+DAY 2 · FRI, 23 OCT
+Central Tokyo
+5 stops · ~7 hr
+[Expand]
+
+Do NOT show all itinerary details while collapsed.
+
+==================================================
+COLLAPSE ALL / EXPAND ALL
+==================================================
+
+At the itinerary top add a lightweight control:
+
+Collapse all
+
+When collapsed, the traveller should be able to scan:
+
+Day 1 · Kamakura
+Day 2 · Central Tokyo
+Day 3 · DisneySea
+Day 4 · Shibuya / Harajuku
+etc.
+
+without scrolling through every stop.
+
+This is particularly important for 7–14 day trips.
+
+==================================================
+PERSIST COLLAPSE STATE
+==================================================
+
+Keep day collapsed/expanded state locally for the current session/trip.
+
+Do not regenerate itinerary or call Gemini when a day is collapsed.
+
+UI interaction only.
+
+Gemini calls:
+0
+
+==================================================
+PROBLEM 3
+MOBILE PLACE DETAIL DOES NOT OPEN PROPERLY
+==================================================
+
+On mobile, when I tap:
+
+Kamakura
+
+I cannot properly see the Place Detail.
+
+Investigate the actual problem.
+
+Do NOT assume it is simply missing.
+
+Check:
+
+click/tap handler
+
+z-index
+
+drawer positioning
+
+desktop-only side panel
+
+viewport width logic
+
+overflow:hidden
+
+parent clipping
+
+modal portal
+
+touch events
+
+scroll locking
+
+responsive CSS
+
+==================================================
+MOBILE PLACE DETAIL BEHAVIOUR
+==================================================
+
+On MOBILE:
+
+tap any itinerary place
+→ open a MOBILE PLACE DETAIL SHEET.
+
+Prefer:
+
+large bottom sheet
+
+or:
+
+full-screen detail sheet
+
+depending on content length.
+
+Because our richer Place Detail will include:
+
+hero image/gallery
+
+Why It's Iconic
+
+Why Go
+
+Experience Profile
+
+Best For
+
+Visit duration
+
+Nearby combinations
+
+Google reviews
+
+Official website
+
+Navigate
+
+this may be better as:
+
+FULL-HEIGHT MOBILE SHEET
+
+rather than a tiny bottom popup.
+
+==================================================
+PLACE DETAIL MUST BE SCROLLABLE
+==================================================
+
+The detail surface must:
+
+scroll independently
+
+respect phone safe areas
+
+have clear Close / Back
+
+not hide behind browser/navigation controls
+
+return the user to the exact itinerary scroll position when closed.
+
+==================================================
+MOBILE ACCEPTANCE TEST
+==================================================
+
+Tap:
+
+Kamakura
+
+Tap:
+
+Tokyo Tower
+
+Tap:
+
+restaurant
+
+Tap:
+
+hotel
+
+All must open usable details on phone.
+
+==================================================
+PROBLEM 4
+“FIND SOMETHING NEARBY” IS NOT CONTEXTUAL
+==================================================
+
+Current behaviour:
+
+FREE TIME
+11:55 AM–6:30 PM
+
+[Find something nearby]
+
+Clicking this currently sends me to the FULL Discover list.
+
+That is not useful.
+
+If I click:
+
+FIND SOMETHING NEARBY
+
+from a specific point in Day 1:
+
+Kairos already knows:
+
+where I currently am
+
+what time it is
+
+how much free time I have
+
+where the next fixed stop is
+
+what I have already visited
+
+my interests
+
+my pace
+
+my travel style
+
+So it should CURATE nearby options.
+
+==================================================
+NEW NEARBY DISCOVERY FLOW
+==================================================
+
+When user taps:
+
+Find something nearby
+
+pass context:
+
+anchorPlace
+
+anchorCoordinates
+
+day
+
+freeWindowStart
+
+freeWindowEnd
+
+nextStop
+
+nextStopCoordinates
+
+remainingFreeMinutes
+
+tripPreferences
+
+weather
+
+alreadyScheduledPlaces
+
+alreadyRejectedPlaces
+
+traveller constraints
+
+==================================================
+NEARBY RESULT SHEET
+==================================================
+
+Open something like:
+
+NEAR KAMAKURA
+You have 6 hr 35 min free
+
+KAIROS PICKS
+
+[photo]
+Hase-dera
+Temple · Gardens · Views
+
+Why now
+8 min from your current stop and pairs naturally
+with the Great Buddha.
+
+Allow
+1–1.5 hr
+
+[Add]
+
+---------------------------------
+
+[photo]
+Tsurugaoka Hachimangu
+
+Why now
+Fits on the route back toward Kamakura Station.
+
+Allow
+1–1.5 hr
+
+[Add]
+
+---------------------------------
+
+Then perhaps categories:
+
+ESSENTIAL NEARBY
+
+GOOD FIT
+
+FOOD
+
+COFFEE / BREAK
+
+SCENERY
+
+IF YOU HAVE MORE TIME
+
+Do not send the user to the generic entire-destination list.
+
+==================================================
+NEARBY MUST BE ANCHOR-AWARE
+==================================================
+
+Nearby means:
+
+practically close to the current itinerary position
+
+NOT:
+
+somewhere in Tokyo because the trip destination is Tokyo.
+
+Use:
+
+coordinates
++
+real/estimated route time
+
+not text names.
+
+==================================================
+NEARBY MUST BE TIME-AWARE
+==================================================
+
+If free time is:
+
+45 minutes
+
+do not suggest:
+
+90-minute museum + 40-minute travel.
+
+If free time is:
+
+6 hr 35 min
+
+Kairos can suggest:
+
+several nearby stops
+
+or even:
+
+Build me a mini-plan
+
+==================================================
+ADD:
+FILL THIS GAP
+==================================================
+
+For free windows add:
+
+[Find something nearby]
+
+and where there is enough time:
+
+[Fill this gap]
+
+Example:
+
+FREE TIME
+11:55 AM–6:30 PM · 6 hr 35 min
+
+[Find nearby]
+[Fill this gap]
+
+Fill this gap can generate a SMALL local sequence:
+
+Lunch
+↓
+Temple
+↓
+Coffee
+↓
+Scenic walk
+
+using the existing itinerary context.
+
+Do NOT regenerate the entire trip.
+
+==================================================
+NO EXTRA FULL-TRIP GEMINI CALL
+==================================================
+
+Nearby discovery should first use deterministic:
+
+canonical places
+distance
+routing
+opening hours
+visit duration
+categories
+trip interests
+
+Then optionally ONE small curation call if genuinely useful.
+
+Do not run full itinerary generation again.
+
+==================================================
+PROBLEM 5
+KAMAKURA IS BEING TREATED AS AN ATTRACTION
+==================================================
+
+The itinerary currently shows:
+
+Kamakura
+鎌倉市
+Attraction · 1 hr 30 min
+
+This appears incorrect.
+
+Kamakura is a CITY / DESTINATION AREA.
+
+It should not normally be scheduled as:
+
+an attraction with 90-minute visit duration.
+
+Audit the destination typing.
+
+==================================================
+AREA VS ACTUAL PLACE
+==================================================
+
+Travel needs to distinguish:
+
+CITY
+REGION
+NEIGHBOURHOOD
+EXCURSION_AREA
+
+from:
+
+ATTRACTION
+MUSEUM
+TEMPLE
+PARK
+RESTAURANT
+CAFE
+etc.
+
+A city/area should normally act as:
+
+destination container
+
+day-trip container
+
+geographic cluster
+
+or base
+
+not as a 90-minute POI.
+
+==================================================
+KAMAKURA EXAMPLE
+==================================================
+
+Instead of:
+
+10:25–11:55
+Kamakura
+Attraction · 90 min
+
+a Kamakura day should contain actual verified attractions.
+
+Conceptually:
+
+Arrive Kamakura
+
+Great Buddha
+
+Hase-dera
+
+Lunch
+
+Tsurugaoka Hachimangu
+
+Komachi Street / relevant district
+
+etc.
+
+ONLY if those places fit the user's interests,
+opening hours and route.
+
+Do NOT hard-code those exact places as the production solution.
+
+Use them only as acceptance examples.
+
+==================================================
+AREA ARRIVAL
+==================================================
+
+If useful, the itinerary may show:
+
+10:20
+Arrive in Kamakura
+
+but that is a TRAVEL/AREA MARKER.
+
+It should NOT consume:
+
+90-minute attraction duration.
+
+==================================================
+PROBLEM 6
+FOOD / CAFE RECOMMENDATIONS HAVE NO EXPLANATION
+==================================================
+
+I am not sure why Kairos chooses particular:
+
+restaurants
+
+cafes
+
+dessert places
+
+The current itinerary needs stronger reasoning.
+
+Food stops absolutely CAN belong in a Travel itinerary.
+
+But they should have a PURPOSE.
+
+==================================================
+FOOD STOP PHILOSOPHY
+==================================================
+
+Do NOT randomly add:
+
+Cafe A
+
+because the day needs another place.
+
+A food stop should solve something.
+
+Examples:
+
+MEAL TIMING
+
+local cuisine
+
+high-quality option near current route
+
+natural rest point
+
+scenic café
+
+special destination restaurant
+
+family-friendly meal
+
+fast meal on a busy sightseeing day
+
+late-night food near hotel
+
+rain-friendly break
+
+iconic local food experience
+
+==================================================
+FOOD STOP TYPES
+==================================================
+
+Distinguish:
+
+MEAL DESTINATION
+
+Worth travelling specifically for.
+
+Example:
+famous local restaurant / signature cuisine.
+
+ROUTE-FIT MEAL
+
+Good restaurant chosen because it lies naturally
+between two itinerary stops.
+
+QUICK MEAL
+
+Prioritises convenience and time.
+
+CAFE / REST BREAK
+
+Used because the day's walking/pace benefits from a break.
+
+SCENIC CAFE
+
+The venue itself contributes to the experience.
+
+LOCAL SPECIALTY
+
+Selected to expose traveller to a food closely associated
+with that destination.
+
+==================================================
+WHY THIS FOOD STOP
+==================================================
+
+Every automatically recommended restaurant/café should have a
+concise reason.
+
+Example:
+
+LUNCH · LOCAL SPECIALTY
+
+Why here
+Known for Kamakura-style shirasu dishes and only
+6 min from your next stop.
+
+or:
+
+CAFE BREAK
+
+Why here
+Fits your 45-minute gap and avoids a 20-minute detour.
+
+or:
+
+DINNER · NEAR HOTEL
+
+Why here
+Good fit after a long sightseeing day and only
+8 min back to your hotel.
+
+==================================================
+DO NOT INVENT FOOD REPUTATION
+==================================================
+
+Statements such as:
+
+“famous for”
+“one of the best”
+“locals love”
+“highly rated”
+
+must only appear when supported by legitimate data.
+
+If Kairos only knows:
+
+category
+location
+opening hours
+
+say:
+
+Convenient route-fit lunch option
+
+rather than inventing culinary reputation.
+
+==================================================
+FOOD EXPERIENCE PROFILE
+==================================================
+
+For food places, the experience profile can use relevant
+dimensions such as:
+
+Local food
+Atmosphere
+Convenience
+Scenic setting
+Special occasion
+Family fit
+Value
+
+ONLY when defensible.
+
+Do not fabricate review scores.
+
+==================================================
+GOOGLE REVIEWS
+==================================================
+
+Preserve:
+
+[View Google reviews]
+
+This is particularly useful for restaurants.
+
+Kairos does not need to reproduce the entire review ecosystem.
+
+==================================================
+RESTAURANT CHOICE / SWAP
+==================================================
+
+Allow:
+
+[Keep]
+
+[Swap]
+
+[Find another nearby]
+
+for scheduled food stops.
+
+If user taps:
+
+Find another nearby
+
+preserve:
+
+meal time
+location corridor
+budget
+cuisine/dietary constraints
+next stop
+
+Do NOT reroll the entire day.
+
+==================================================
+CAFE OPTIONALITY
+==================================================
+
+Cafés should generally be more OPTIONAL than major attractions.
+
+If pace is:
+
+RELAXED
+
+Kairos may intentionally include:
+
+coffee/rest stop
+
+If pace is:
+
+SEE MORE
+
+Kairos should not unnecessarily consume 60–90 minutes with a café
+unless it is itself a worthwhile experience.
+
+==================================================
+USER PREFERENCE
+==================================================
+
+Add a Travel preference such as:
+
+FOOD PLANNING
+
+Minimal
+Meals only
+Balanced
+Food is part of the trip
+
+Meaning:
+
+MINIMAL
+Kairos avoids scheduling named restaurants unless necessary.
+
+MEALS ONLY
+Kairos includes sensible meal windows / convenient suggestions.
+
+BALANCED
+Kairos includes good/local food where it fits naturally.
+
+FOOD IS PART OF THE TRIP
+Kairos treats restaurants/markets/local dishes as important
+travel experiences.
+
+==================================================
+DO NOT REQUIRE A NAMED RESTAURANT
+==================================================
+
+If Kairos does not have enough reliable restaurant data:
+
+do NOT invent or choose a poor-quality venue.
+
+It may instead schedule:
+
+LUNCH · Kamakura Station area
+12:30–1:30 PM
+
+Then offer:
+
+[Choose restaurant]
+
+This is better than pretending a random OSM restaurant is a
+strong recommendation.
+
+==================================================
+MEAL WINDOW LOGIC
+==================================================
+
+Preserve sensible meal timing.
+
+Breakfast
+~06:30–10:30
+
+Lunch
+~11:30–14:30
+
+Afternoon cafe/rest
+~14:00–17:30
+
+Dinner
+~17:30–21:30
+
+Supper
+later
+
+Adapt to destination norms where possible.
+
+Do not schedule lunch at an absurd time just because route
+optimization says so.
+
+==================================================
+WANDERLOG-STYLE FUNCTIONALITY
+==================================================
+
+The goal is NOT to clone Wanderlog.
+
+However, retain useful planning concepts found in mature travel
+planners:
+
+- daily itinerary
+- restaurants alongside attractions
+- map-linked places
+- travel time between stops
+- place details
+- nearby discovery
+- category-based recommendations
+- easy add/move/remove
+
+KAIROS should improve on this by making recommendations CONTEXTUAL.
+
+The question is not merely:
+
+“What restaurants exist?”
+
+It is:
+
+“Which restaurant makes sense here, at this time, for this
+traveller, on this route?”
+
+==================================================
+PROBLEM 7
+THE 766-MINUTE WALK DISPLAY NEEDS REVIEW
+==================================================
+
+The current route says:
+
+Taxi · 65 min
+Cuts walking from 766 min to 65 min.
+
+This is technically possible because Tokyo → Kamakura is far,
+but displaying:
+
+766 min walking
+
+is not useful.
+
+For obviously impractical modes:
+
+do NOT surface huge comparison numbers.
+
+Instead:
+
+Taxi · ~65 min
+
+or preferably if genuine transit data exists:
+
+Train · ~60 min
+
+Then Alternatives.
+
+Mark absurd alternatives:
+
+Walking
+Not practical
+
+rather than:
+
+766 min.
+
+==================================================
+INTERCITY / EXCURSION TRANSPORT
+==================================================
+
+Tokyo → Kamakura should be recognised as an EXCURSION LEG,
+not ordinary intra-city movement.
+
+For excursion/intercity legs:
+
+prioritise legitimate:
+
+rail
+coach
+drive
+transfer
+
+where data exists.
+
+Do not use the same decision logic as:
+
+hotel → restaurant 1 km away.
+
+==================================================
+DAY SUMMARY
+==================================================
+
+Each Day header should summarise the day's CHARACTER.
+
+Example:
+
+DAY 1 · KAMAKURA DAY TRIP
+Culture · temples · coastal atmosphere
+
+4 stops · ~7 hr
+Tokyo ↔ Kamakura
+
+This is much more useful than merely:
+
+Day 1 · Thu, 22 Oct
+
+==================================================
+COLLAPSED DAY SUMMARY
+==================================================
+
+When collapsed:
+
+DAY 1 · KAMAKURA
+4 stops · Day trip
+Tokyo ↔ Kamakura
+
+DAY 2 · CENTRAL TOKYO
+5 stops · Full day
+
+DAY 3 · SHIBUYA + HARAJUKU
+4 stops · Half/Full day
+
+This lets users understand the trip in seconds.
+
+==================================================
+MOBILE PLAN ACTIONS
+==================================================
+
+Reduce large repetitive buttons.
+
+For compact itinerary cards:
+
+tap card
+→ detail
+
+Use small contextual actions where needed.
+
+Do not consume half the mobile viewport with:
+
+Earlier
+Later
+Remove
+
+for every single stop if a cleaner overflow/menu interaction works.
+
+Consider:
+
+⋯
+
+Move earlier
+Move later
+Move
+Remove
+
+while preserving ease of use.
+
+==================================================
+DO NOT OVER-COMPRESS
+==================================================
+
+Major actions still need good touch targets.
+
+The goal is:
+
+less vertical clutter
+
+not tiny inaccessible controls.
+
+==================================================
+ACCEPTANCE TEST — 7-DAY TRIP
+==================================================
+
+Generate a 7-day Japan itinerary.
+
+On phone:
+
+I should be able to collapse all days and see an overview of the
+whole trip without scrolling through dozens of place cards.
+
+PASS only if:
+
+Day boundaries are visually obvious.
+
+Each day collapses independently.
+
+Collapse all works.
+
+No Gemini call occurs when collapsing.
+
+==================================================
+ACCEPTANCE TEST — PLACE DETAILS
+==================================================
+
+On mobile:
+
+tap Kamakura-area attraction.
+
+Expected:
+
+full usable Place Detail opens.
+
+Scroll works.
+
+Close returns to same location in itinerary.
+
+==================================================
+ACCEPTANCE TEST — NEARBY
+==================================================
+
+Have:
+
+FREE TIME
+2:00–5:00 PM
+
+at a Kamakura attraction.
+
+Tap:
+
+Find something nearby.
+
+Expected:
+
+nearby CURATED places around that actual anchor.
+
+NOT generic Tokyo Discover.
+
+Each result should explain:
+
+distance/travel time
+
+why it fits now
+
+estimated visit time
+
+whether it fits before next stop.
+
+==================================================
+ACCEPTANCE TEST — FILL GAP
+==================================================
+
+Have:
+
+4-hour free window.
+
+Tap:
+
+Fill this gap.
+
+Expected:
+
+small geographic mini-plan.
+
+Do not regenerate other days.
+
+==================================================
+ACCEPTANCE TEST — KAMAKURA TYPE
+==================================================
+
+Kamakura city itself must NOT appear as:
+
+Attraction · 90 min
+
+unless there is genuinely a specific attraction with that name.
+
+Area/city should be:
+
+day-trip destination / cluster / arrival marker.
+
+==================================================
+ACCEPTANCE TEST — FOOD
+==================================================
+
+For each auto-scheduled restaurant/café:
+
+there must be an actual reason it occupies itinerary time.
+
+Examples:
+
+local specialty
+
+route fit
+
+meal window
+
+rest break
+
+destination-worthy dining
+
+If there is no credible specific venue:
+
+use:
+
+Lunch · [area]
+
+and let user choose.
+
+==================================================
+ACCEPTANCE TEST — FOOD PREFERENCE
+==================================================
+
+Set:
+
+Food planning = Minimal
+
+Expected:
+
+very few/no arbitrary cafés.
+
+Set:
+
+Food planning = Food is part of the trip
+
+Expected:
+
+meaningful restaurants/markets/local-food experiences receive
+more itinerary weight.
+
+==================================================
+FREE-FIRST REQUIREMENT
+==================================================
+
+Do NOT introduce paid APIs to solve these UX problems.
+
+Use existing:
+
+canonical place data
+
+routing
+
+open place data
+
+external Google review links
+
+and existing providers.
+
+==================================================
+NO UNNECESSARY LLM CALLS
+==================================================
+
+Collapse:
+0
+
+Expand:
+0
+
+Open Place Detail:
+0 if enrichment already cached
+
+Navigate:
+0
+
+Nearby initial candidate filtering:
+0
+
+Nearby optional final curation:
+maximum 1 where beneficial
+
+Restaurant swap:
+prefer deterministic shortlist + at most one curation call
+
+==================================================
+FINAL REPORT
+==================================================
+
+After implementation report:
+
+1. Files changed
+
+2. Why Day 1 and Day 2 were visually running together
+
+3. Day container implementation
+
+4. Collapse/expand implementation
+
+5. Collapse-all implementation
+
+6. Mobile Place Detail root cause
+
+7. Mobile Place Detail fix
+
+8. Exact reason Find Something Nearby previously opened the full
+   list
+
+9. New contextual nearby algorithm
+
+10. How free-window duration affects nearby results
+
+11. How next stop affects nearby results
+
+12. Why Kamakura was being typed as an Attraction
+
+13. How city/region/area objects are now prevented from becoming
+    timed POIs
+
+14. New food-stop reasoning
+
+15. Food Planning preference implementation
+
+16. How café insertion changes by pace
+
+17. How named restaurant vs meal-area fallback works
+
+18. How absurd walking alternatives such as 766 min are handled
+
+19. How excursion/intercity route legs differ from local legs
+
+20. Number of Gemini calls before/after
+
+21. 7-day mobile collapse test
+
+22. Kamakura Place Detail mobile test
+
+23. Nearby Kamakura test
+
+24. Fill Gap test
+
+25. Food recommendation test
+
+Do actual implementation.
+
+Do NOT merely explain what should change.
+
+Do NOT consider this complete if:
+
+- long trips are still one giant continuous mobile stream
+- days cannot collapse
+- tapping a place on phone fails to show details
+- Find Something Nearby still opens generic Discover
+- Kamakura itself is still treated as a 90-minute attraction
+- restaurants/cafés are inserted without explaining why they belong
+  in that specific day.

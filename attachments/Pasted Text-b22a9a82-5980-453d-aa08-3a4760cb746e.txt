@@ -1,0 +1,2486 @@
+Please make a FUNDAMENTAL upgrade to the existing KAIROS TRAVEL implementation.
+
+This is now TRAVEL V3.
+
+IMPORTANT:
+
+Do NOT rebuild Travel from scratch.
+
+First inspect the current implementation and preserve what is already working.
+
+Preserve:
+
+- existing Kairos branding
+- Travel ochre/sand visual identity
+- current Travel route/navigation
+- existing trip brief / natural-language intent parser
+- current trip state
+- free-first provider architecture
+- MapLibre / OpenStreetMap architecture where already working
+- current routing providers
+- weather provider abstraction
+- hotel-change minimisation logic
+- Keep Day / Remix Day
+- Bookings
+- Today integration
+- existing LLM infrastructure
+- existing caching
+- current no-login philosophy
+
+Do NOT merely describe this.
+
+IMPLEMENT it.
+
+==================================================
+THE CURRENT TRAVEL PRODUCT HAS TWO FUNDAMENTAL PROBLEMS
+==================================================
+
+PROBLEM 1:
+
+Kairos currently jumps too quickly from:
+
+preferences
+→ places
+→ itinerary
+
+without first understanding:
+
+WHAT ARE THE DEFINING EXPERIENCES OF THIS DESTINATION?
+
+A first-time Chengdu itinerary that misses most of:
+
+pandas
+Dujiangyan
+major heritage
+major food experiences
+major nature options
+important city districts
+
+has failed even if the route between its chosen obscure POIs is efficient.
+
+Likewise:
+
+a first-time Singapore itinerary that misses most of:
+
+Marina Bay
+Merlion / waterfront
+Gardens by the Bay
+Sentosa
+major wildlife attractions
+heritage districts
+major food experiences
+
+has failed.
+
+==================================================
+
+PROBLEM 2:
+
+After the first itinerary is generated, Travel is too static.
+
+The user currently receives:
+
+text itinerary cards
++
+a separate map
++
+an almost empty Places tab
+
+The user should instead continuously be able to:
+
+discover places
+understand why they are worth visiting
+see photos
+save them
+add them
+remove them
+move them
+see where they are
+understand which day they fit
+understand how to travel between them
+
+Travel planning is an ongoing refinement process.
+
+==================================================
+NEW CORE PRODUCT MODEL
+==================================================
+
+The planning architecture must become:
+
+DESTINATION UNDERSTANDING
+↓
+MAJOR ATTRACTION / EXPERIENCE UNIVERSE
+↓
+TRAVELLER STYLE
+↓
+EXPERIENCE BALANCE
+↓
+PACE + CONSTRAINTS
+↓
+HOTEL / BASE STRATEGY
+↓
+GEOGRAPHIC CLUSTERING
+↓
+FIRST-CUT ITINERARY
+↓
+DESTINATION COVERAGE CHECK
+↓
+TRANSPORT / ROUTING OPTIMISATION
+↓
+DISCOVER
+↓
+UNDERSTAND PLACE
+↓
+ADD / REMOVE / SAVE / MOVE
+↓
+RE-ROUTE
+↓
+REFINE
+
+That is the new Travel product.
+
+==================================================
+PART A
+DESTINATION INTELLIGENCE
+==================================================
+
+Travel must first understand:
+
+“What are the important experiences at this destination?”
+
+Do this BEFORE generating the detailed itinerary.
+
+==================================================
+DESTINATION PROFILE
+==================================================
+
+Create a reusable destination knowledge layer.
+
+Conceptually:
+
+DestinationProfile
+
+{
+  destination,
+  destinationType,
+  iconicAttractions,
+  majorAttractions,
+  interestSpecificAttractions,
+  neighbourhoods,
+  foodAreas,
+  natureOptions,
+  excursionOptions,
+  experienceGroups,
+  typicalVisitDurations,
+  geographicClusters,
+  sourceMetadata,
+  lastVerified
+}
+
+Major destination information should be cacheable.
+
+Do NOT ask Gemini to rediscover the tourist structure of Chengdu every time somebody creates a trip.
+
+==================================================
+DESTINATION PROFILE SOURCES
+==================================================
+
+Use legitimate FREE / OPEN sources where practical.
+
+Potential sources:
+
+OpenStreetMap
+Wikidata
+Wikipedia
+Wikivoyage where licence/attribution allows
+official tourism information where usable
+
+Preserve source provenance.
+
+The LLM may CURATE verified information.
+
+The LLM must not invent attractions.
+
+==================================================
+ATTRACTION IMPORTANCE
+==================================================
+
+Classify candidate experiences conceptually into:
+
+ICONIC / ESSENTIAL
+
+MAJOR
+
+INTEREST-SPECIFIC
+
+LOCAL DISCOVERY
+
+OPTIONAL
+
+For first-time visitors:
+
+ICONIC and MAJOR attractions should receive strong consideration.
+
+==================================================
+FIRST-TIME VISITOR DEFAULT
+==================================================
+
+If user has NOT said otherwise:
+
+assume first visit.
+
+If the user says:
+
+“I've already done the main sights”
+
+or marks specific places:
+
+DONE
+
+then reduce their priority.
+
+==================================================
+DO NOT FORCE EVERY FAMOUS PLACE INTO THE TRIP
+==================================================
+
+Popularity alone does not determine inclusion.
+
+Consider:
+
+trip duration
+travel burden
+season
+weather
+distance
+opening constraints
+visitor interests
+pace
+physical burden
+duplication
+hotel location
+arrival / departure
+
+A famous attraction may legitimately be excluded.
+
+BUT:
+
+Kairos must know it was excluded and explain why.
+
+==================================================
+DESTINATION EXPERIENCE GROUPS
+==================================================
+
+Do not think only in terms of individual POIs.
+
+Think in terms of major experience groups.
+
+Example conceptually for Chengdu:
+
+Pandas
+
+Historic / cultural Chengdu
+
+Local food
+
+Traditional neighbourhoods
+
+Modern shopping / nightlife
+
+Dujiangyan / heritage excursion
+
+Mountain / nature experiences
+
+Regional scenic excursions
+
+The actual categories must come from destination understanding.
+
+==================================================
+FIRST-CUT COVERAGE CHECK
+==================================================
+
+After generating the first itinerary:
+
+run a DESTINATION COVERAGE CHECK.
+
+Example:
+
+CHENGDU COVERAGE
+
+✓ Panda experience
+✓ Historic Chengdu
+✓ Dujiangyan
+✓ Local food
+✓ Shopping / night
+
+○ Mountain scenery
+Not included — high travel burden for this trip.
+
+○ Another major attraction
+Not included — overlaps strongly with another selected experience.
+
+Do NOT create a gimmicky 87/100 tourist score.
+
+Show:
+
+covered
+not covered
+optional
+excluded + reason
+
+==================================================
+FAILURE CONDITION
+==================================================
+
+If a 5–7 day first-time itinerary misses MOST of the destination's defining experience groups without a user reason:
+
+DO NOT show the itinerary yet.
+
+Reconsider:
+
+candidate discovery
+method selection
+geographic clustering
+trip balance
+
+The first-cut planner has failed.
+
+==================================================
+PART B
+TRAVELLER STYLE
+==================================================
+
+The current:
+
+Relaxed
+Balanced
+Full
+
+is only PACE.
+
+It does NOT describe travel personality.
+
+Keep Pace separately.
+
+Rename:
+
+Full
+
+to something clearer such as:
+
+See More
+
+where appropriate.
+
+==================================================
+PACE
+==================================================
+
+RELAXED
+
+BALANCED
+
+SEE MORE
+
+This answers:
+
+“How much do I want to do per day?”
+
+==================================================
+TRAVEL STYLE
+==================================================
+
+Add a separate:
+
+TRAVEL STYLE
+
+Support combinations where sensible.
+
+Suggested styles:
+
+BACKPACKING
+
+COMFORT
+
+LUXURY
+
+ADVENTURE
+
+SLOW TRAVEL
+
+WELLNESS
+
+CULTURAL & HERITAGE
+
+==================================================
+BACKPACKING
+==================================================
+
+Psychology:
+
+freedom
+value
+flexibility
+longer stays
+local experiences
+low cost
+
+Planning consequences:
+
+budget-friendly options
+public transport
+local food
+less rigid scheduling
+high tolerance for simple accommodation
+flexible blocks
+
+==================================================
+COMFORT
+==================================================
+
+Psychology:
+
+convenience
+reasonable quality
+less friction
+
+Planning consequences:
+
+good-location hotels
+balanced transport
+moderate pace
+sensible convenience
+
+==================================================
+LUXURY
+==================================================
+
+Psychology:
+
+comfort
+certainty
+service
+effort reduction
+premium experiences
+
+Planning consequences:
+
+better hotels
+convenient transfers
+less waiting
+taxi/private transport where sensible
+premium experiences
+more comfortable scheduling
+
+==================================================
+ADVENTURE
+==================================================
+
+Psychology:
+
+novelty
+physical challenge
+achievement
+outdoor intensity
+
+Planning consequences:
+
+mountains
+hiking
+diving
+active experiences
+early starts where worthwhile
+higher physical load
+
+==================================================
+SLOW TRAVEL
+==================================================
+
+Psychology:
+
+depth
+immersion
+local rhythm
+low transition cost
+
+Planning consequences:
+
+fewer attractions
+longer neighbourhood stays
+local markets
+cafes
+free time
+fewer hotel changes
+less rushing
+
+==================================================
+WELLNESS
+==================================================
+
+Psychology:
+
+restoration
+health
+environment
+low stress
+
+Planning consequences:
+
+nature
+spa
+retreats
+lower travel burden
+rest periods
+sleep-friendly scheduling
+
+==================================================
+CULTURAL & HERITAGE
+==================================================
+
+Psychology:
+
+history
+meaning
+learning
+authenticity
+
+Planning consequences:
+
+historic places
+architecture
+museums
+heritage areas
+local traditions
+cultural experiences
+
+==================================================
+STYLE COMBINATIONS
+==================================================
+
+Do NOT force exactly one style.
+
+Allow something like:
+
+PRIMARY STYLE
+
+and:
+
+SECONDARY STYLE
+
+Examples:
+
+Luxury + Culture
+
+Slow + Food
+
+Adventure + Nature
+
+Backpacking + Culture
+
+Comfort + Family
+
+==================================================
+PART C
+EXPERIENCE BALANCE
+==================================================
+
+Add another independent dimension:
+
+TRIP BALANCE
+
+Most important:
+
+CITY ←→ NATURE
+
+Options could be:
+
+CITY-HEAVY
+
+BALANCED
+
+NATURE-HEAVY
+
+or a simple slider.
+
+This must materially affect itinerary generation.
+
+==================================================
+OTHER BALANCE AXES
+==================================================
+
+Architect for future controls such as:
+
+FAMOUS SIGHTS ←→ LOCAL DISCOVERY
+
+CULTURE ←→ ENTERTAINMENT
+
+PLANNED ←→ SPONTANEOUS
+
+Do NOT overwhelm the initial form.
+
+City/Nature is the priority now.
+
+==================================================
+EXAMPLE
+==================================================
+
+CHENGDU
+
+6 nights
+
+Balanced pace
+
+Balanced City/Nature
+
+Culture + Food + Shopping
+
+One base
+
+should NOT become:
+
+six urban days.
+
+It should consider:
+
+major urban Chengdu
+pandas
+heritage
+Dujiangyan
+food
+shopping/nightlife
+one sensible nature excursion
+
+Then decide whether farther mountain destinations justify their travel burden.
+
+==================================================
+PART D
+HOTEL / BASE STRATEGY
+==================================================
+
+Hotel selection is NOT just another POI.
+
+The hotel affects every sightseeing day.
+
+Kairos must help answer:
+
+WHERE SHOULD I STAY FOR THIS PARTICULAR ITINERARY?
+
+==================================================
+HOTEL DECISION FACTORS
+==================================================
+
+Where VERIFIED data exists, evaluate:
+
+LOCATION
+
+travel time to actual itinerary clusters
+
+access to useful transit
+
+airport / station convenience
+
+walkability
+
+restaurants nearby
+
+evening convenience
+
+ROOM SIZE
+
+if verified
+
+AIR CONDITIONING
+
+whether individual room temperature control is verified
+
+NOISE
+
+recurring complaints where legitimate review data exists
+
+SOUNDPROOFING
+
+where verified
+
+CLEANLINESS
+
+where trustworthy evidence exists
+
+FAMILY SUITABILITY
+
+room configuration
+breakfast
+laundry
+parking
+child facilities
+
+SERVICE / QUALITY
+
+where trustworthy data exists
+
+==================================================
+HOTEL MUST BE JUDGED AGAINST THIS ITINERARY
+==================================================
+
+Do NOT rank hotel purely by:
+
+distance to generic city centre.
+
+Calculate accessibility to:
+
+the actual planned sightseeing clusters.
+
+Example:
+
+Hotel A may be slightly farther from geographic centre but reduce travel to 4 of 6 planned days.
+
+That could make it the better base.
+
+==================================================
+HOTEL REVIEW DATA
+==================================================
+
+This is difficult under a free-first model.
+
+Audit what legitimate review data is available.
+
+Do NOT illegally scrape:
+
+Booking
+Tripadvisor
+Google
+Agoda
+etc.
+
+Do NOT fabricate review findings.
+
+Create provider abstraction such as:
+
+HotelFactsProvider
+
+HotelReviewProvider
+
+HotelAvailabilityProvider
+
+==================================================
+UNKNOWN HOTEL INFORMATION
+==================================================
+
+If Kairos cannot verify:
+
+individual A/C
+
+noise
+
+soundproofing
+
+room size
+
+etc.
+
+show:
+
+NOT VERIFIED
+
+Example:
+
+AIR CONDITIONING
+
+Individual room control:
+Not verified
+
+This is better than hallucinating.
+
+==================================================
+HOTEL SHORTLIST
+==================================================
+
+Where sufficient verified data exists:
+
+provide a useful shortlist such as:
+
+BEST OVERALL BASE
+
+BEST LOCATION
+
+BEST QUIET OPTION
+
+BEST VALUE
+
+Do not force all four categories when evidence is insufficient.
+
+==================================================
+HOTEL CARD
+==================================================
+
+Example:
+
+HOTEL A
+
+BEST OVERALL BASE
+
+WHY
+
+Excellent location for 4 of your 6 sightseeing days.
+
+TRAVEL BURDEN
+Low
+
+TRANSIT
+Verified nearby station
+
+ROOM SIZE
+32 m²
+Verified
+
+AIR CONDITIONING
+Individual control
+Verified
+
+NOISE
+Several review sources mention street noise
+
+or:
+
+NO RELIABLE REVIEW SIGNAL AVAILABLE
+
+KAIROS TAKE
+
+“Best location, but light sleepers should verify a quiet room.”
+
+==================================================
+HOTEL BASE CHANGE LOGIC
+==================================================
+
+Compare:
+
+ONE BASE
+
+versus:
+
+TWO BASES
+
+when multiple bases could materially improve the trip.
+
+Account for:
+
+packing
+checkout
+luggage
+transport
+check-in
+lost time
+children
+trip pace
+
+Example:
+
+OPTION A
+
+One base
+0 hotel changes
++48 min total sightseeing travel
+
+OPTION B
+
+Two bases
+1 hotel change
+saves 2h 40m travel
+
+Kairos may recommend B only if the saving is worth the friction.
+
+==================================================
+USER CONTROL
+==================================================
+
+Allow:
+
+SELECT AS BASE
+
+CHANGE HOTEL
+
+I ALREADY BOOKED SOMEWHERE ELSE
+
+REMOVE
+
+If user changes hotel:
+
+recalculate:
+
+day origins
+routing
+travel burden
+
+Do NOT regenerate all attraction preferences from scratch.
+
+==================================================
+PART E
+BROAD PLAN BEFORE DETAILED PLAN
+==================================================
+
+Travel should first create a BROAD STRUCTURE.
+
+Example:
+
+DAY 1
+Arrival + central Chengdu
+
+DAY 2
+Panda + compatible nearby cluster
+
+DAY 3
+Dujiangyan excursion
+
+DAY 4
+Heritage + food
+
+DAY 5
+Nature excursion
+
+DAY 6
+Shopping + flexible city day
+
+Only after the broad structure is sensible should Kairos build:
+
+exact stops
+times
+routes
+
+==================================================
+GEOGRAPHIC CLUSTERING
+==================================================
+
+Nearby attractions should be grouped together where practical.
+
+Use:
+
+coordinates
+route matrix
+travel times
+opening hours where available
+visit duration
+weather
+day/night suitability
+meal timing
+
+Avoid:
+
+crossing the city
+then returning to where you started later the same day
+
+unless required.
+
+==================================================
+EXCURSIONS
+==================================================
+
+Recognise major excursions separately from city POIs.
+
+Examples conceptually:
+
+Dujiangyan
+
+Bipenggou
+
+Siguniang Mountain
+
+regional scenic destinations
+
+These are usually:
+
+HALF-DAY
+FULL-DAY
+or
+OVERNIGHT
+
+planning units.
+
+Do NOT squeeze a mountain destination between two urban restaurants.
+
+==================================================
+PART F
+FIRST-CUT EXPLANATION
+==================================================
+
+After generation show:
+
+WHY THIS TRIP LOOKS LIKE THIS
+
+Example:
+
+“You asked for a balanced city-and-nature trip with one hotel base.
+
+I prioritised Chengdu's defining first-time experiences, one major heritage excursion and one nature day while keeping hotel changes at zero.”
+
+Then:
+
+WHAT I LEFT OUT
+
+Example:
+
+“Siguniang Mountain is not included because the return journey would consume too much of this six-night itinerary.”
+
+Use the actual planning reason.
+
+==================================================
+QUICK REBALANCING
+==================================================
+
+Offer:
+
+MORE CITY
+
+MORE NATURE
+
+MORE CULTURE
+
+MORE LOCAL
+
+MORE RELAXED
+
+FIT MORE IN
+
+These should modify the trip intelligently.
+
+Do NOT require the user to start over.
+
+==================================================
+PART G
+DISCOVER IS THE REFINEMENT ENGINE
+==================================================
+
+After Kairos creates a strong first cut:
+
+the user must be able to continuously refine it.
+
+Current:
+
+PLAN
+MAP
+PLACES
+BOOKINGS
+
+should become approximately:
+
+PLAN
+DISCOVER
+MAP
+BOOKINGS
+
+if architecture allows cleanly.
+
+==================================================
+DISCOVER MUST NOT BE EMPTY
+==================================================
+
+After generating a trip:
+
+DISCOVER should contain verified real alternatives and suggestions.
+
+Suggested sections:
+
+KAIROS PICKS
+
+OTHER MAJOR SIGHTS
+
+GOOD FIT FOR YOUR TRIP
+
+NEAR DAY 2
+
+NEAR DAY 3
+
+FOOD & DRINK
+
+CULTURE
+
+NATURE
+
+SHOPPING
+
+EVENING
+
+RAINY-DAY OPTIONS
+
+SAVED
+
+UNSCHEDULED
+
+Only show meaningful sections.
+
+==================================================
+OTHER MAJOR SIGHTS
+==================================================
+
+This is particularly important.
+
+If Kairos left out an ICONIC or MAJOR attraction:
+
+show it here.
+
+Example:
+
+SIGUNIANG MOUNTAIN
+
+Major nature destination
+
+Not currently scheduled
+
+WHY:
+
+High travel burden for this six-night plan.
+
+[ Add anyway ]
+
+This proves Kairos knows what it omitted.
+
+==================================================
+PART H
+RICH PLACE CARDS
+==================================================
+
+Every suggested place should be a real interactive object.
+
+Example:
+
+[ PHOTO ]
+
+Wenshu Monastery
+文殊院
+
+Temple · Culture
+
+A concise factual description.
+
+WHY KAIROS PICKED IT
+
+“Good morning stop, close to your central cluster and easy to combine with nearby food areas.”
+
+Suggested visit:
+1–1.5 hr
+
+Suggested day:
+Day 4
+
+From hotel:
+18 min taxi
+
+[ Add ]
+[ Save ]
+
+==================================================
+PHOTOS
+==================================================
+
+Photos are important for travel discovery.
+
+Use legitimate free/open sources where practical.
+
+Investigate:
+
+Wikimedia Commons
+Wikidata image properties
+Wikipedia page images
+other legitimate open image sources
+
+Preserve attribution where required.
+
+Do NOT scrape commercial copyrighted photography illegally.
+
+Do NOT fabricate tourism photos.
+
+No image available:
+
+show a tasteful no-photo state.
+
+==================================================
+PLACE DESCRIPTION
+==================================================
+
+Use verified facts.
+
+Potential:
+
+Wikipedia
+Wikidata
+OSM
+official tourism content where usable
+
+LLM may summarise verified information.
+
+LLM may not invent factual details.
+
+==================================================
+PART I
+ONE CANONICAL PLACE OBJECT
+==================================================
+
+This is critical.
+
+The same Place object must power:
+
+DISCOVER
+
+PLAN
+
+MAP
+
+Conceptual structure:
+
+{
+  id,
+  provider,
+  providerId,
+  name,
+  localName,
+  category,
+  importanceTier,
+  experienceGroups,
+  description,
+  image,
+  source,
+  address,
+  lat,
+  lng,
+  visitDuration,
+  saved,
+  scheduled,
+  scheduledDay,
+  userFeedback
+}
+
+Do not create:
+
+one place object in Discover
+
+another unrelated object in Plan
+
+another map marker object
+
+==================================================
+PART J
+PLACE DETAIL
+==================================================
+
+Tapping a place anywhere should open the SAME Place Detail.
+
+Mobile:
+
+bottom sheet / full-height sheet
+
+Desktop:
+
+side panel
+
+==================================================
+PLACE DETAIL CONTENT
+==================================================
+
+Example:
+
+[ LARGE PHOTO ]
+
+WENSHU MONASTERY
+文殊院
+
+Temple · Historic · Culture
+
+ABOUT
+
+Concise factual description.
+
+WHY KAIROS RECOMMENDS IT
+
+“Strong fit with your culture preference and geographically easy to combine with Day 4.”
+
+WHY IT MATTERS
+
+Major cultural site / Local discovery / etc.
+
+SUGGESTED VISIT
+
+1–1.5 hr
+
+BEST FIT
+
+Day 4 · Morning
+
+LOCATION
+
+Verified address
+
+TRAVEL CONTEXT
+
+From previous:
+12 min walk
+
+To next:
+17 min taxi
+
+Actions:
+
+[ Add to trip ]
+
+[ Save ]
+
+[ Not for me ]
+
+If scheduled:
+
+[ Move ]
+
+[ Replace ]
+
+[ Remove ]
+
+==================================================
+PART K
+ADD TO TRIP
+==================================================
+
+When user taps:
+
+ADD
+
+do NOT blindly append it.
+
+Offer:
+
+BEST FIT
+
+Day 3 · Afternoon
+
+WHY:
+
+“Already close to two Day 3 stops and adds only ~14 minutes of travel.”
+
+Then:
+
+[ Add to Day 3 ]
+
+or:
+
+[ Choose another day ]
+
+==================================================
+AFTER ADD
+==================================================
+
+Immediately:
+
+update itinerary
+update map
+recalculate surrounding travel legs
+recalculate arrival times
+update day density
+update travel burden
+detect conflict
+
+Do NOT regenerate the whole trip.
+
+==================================================
+REMOVE
+==================================================
+
+Every scheduled place needs:
+
+REMOVE
+
+After removing:
+
+offer:
+
+Save for later
+
+or:
+
+Remove completely
+
+Then reroute the remaining day.
+
+==================================================
+NOT FOR ME
+==================================================
+
+Add:
+
+NOT FOR ME
+
+This should:
+
+remove the recommendation
+persist an exclusion/preference
+avoid immediately recommending it again
+
+No login required.
+
+Use existing persistent planner/device storage.
+
+==================================================
+PART L
+PLAN CARDS
+==================================================
+
+Current itinerary cards are too anonymous.
+
+A scheduled stop should look like a compact place object.
+
+Example:
+
+09:00
+
+[thumb] Wenshu Monastery
+        Culture · 1h 30m
+
+↓ 12 min · Walk
+
+11:00
+
+[thumb] Kuanzhai Alley
+        Historic area · 1h
+
+Tap:
+
+open Place Detail.
+
+==================================================
+PART M
+PLAN + MAP LINKAGE
+==================================================
+
+PLAN and MAP must use the same place objects.
+
+Tap Plan stop:
+
+focus/highlight corresponding map marker.
+
+Tap Map marker:
+
+open same Place Detail.
+
+Tap Discover place:
+
+show on map.
+
+==================================================
+DESKTOP
+==================================================
+
+Strongly consider:
+
+LEFT 55–60%
+
+Plan / Discover
+
+RIGHT 40–45%
+
+sticky Map
+
+The itinerary and geography should be visible together.
+
+==================================================
+MOBILE
+==================================================
+
+Separate Map tab is acceptable.
+
+But:
+
+selected place must persist between:
+
+Plan
+Discover
+Map
+
+Provide:
+
+Show on map
+
+from Place Detail.
+
+==================================================
+PART N
+TRANSPORT IS A FIRST-CLASS FEATURE
+==================================================
+
+Current output such as:
+
+“By road · 15 min · not a timetable”
+
+while user selected:
+
+TRANSIT
+
+is not acceptable.
+
+A road estimate is NOT transit.
+
+==================================================
+TRAVEL PREFERENCE VS ACTUAL LEG
+==================================================
+
+The trip-level control:
+
+Walk
+Transit
+Drive
+
+means:
+
+PREFERRED TRAVEL STYLE.
+
+It does NOT mean every journey must use that mode.
+
+Each leg should determine the most sensible option.
+
+==================================================
+EXAMPLE
+==================================================
+
+Hotel → Wenshu
+
+Taxi · 17 min
+
+Wenshu → Lunch
+
+Walk · 8 min
+
+Lunch → Panda Base
+
+Transit · 44 min
+
+or:
+
+Taxi · 28 min
+
+Kairos recommends one.
+
+==================================================
+CANONICAL TRAVEL LEG
+==================================================
+
+Create a reusable leg model.
+
+Conceptually:
+
+{
+  fromStopId,
+  toStopId,
+
+  recommendedMode,
+
+  alternatives: [
+    {
+      mode,
+      durationMinutes,
+      distanceKm,
+      transfers,
+      walkingMinutes,
+      routeSource
+    }
+  ],
+
+  selectedMode,
+  routeGeometry,
+  verifiedAt
+}
+
+Only include fields genuinely known.
+
+==================================================
+TRANSPORT SEGMENT UI
+==================================================
+
+Between stops:
+
+↓ BEST WAY
+
+Taxi · 18 min
+
+Other options:
+
+Transit · 31 min · 1 change
+
+Walk · 52 min
+
+[ Change ]
+
+==================================================
+USER OVERRIDE
+==================================================
+
+Tap travel leg:
+
+HOW DO YOU WANT TO GET THERE?
+
+Recommended:
+Taxi · 18 min
+
+Transit:
+31 min · 1 transfer
+
+Walk:
+52 min
+
+[ Use Transit ]
+
+When changed:
+
+recalculate:
+
+arrival time
+remaining schedule
+day duration
+travel burden
+
+==================================================
+PUBLIC TRANSIT REALITY
+==================================================
+
+Transit is difficult worldwide.
+
+DO NOT FAKE IT.
+
+If real open/public transit routing exists:
+
+use it.
+
+If not:
+
+show:
+
+TRANSIT DETAILS UNAVAILABLE
+
+and optionally:
+
+[ Open transit directions ]
+
+via an external maps app/deep link.
+
+Potentially:
+
+Google Maps
+Apple Maps
+Amap / 高德
+etc.
+
+Do not secretly use a road estimate as “transit”.
+
+==================================================
+NEVER DISPLAY
+==================================================
+
+TRANSIT
+
+By road · 15 min
+
+That is semantically wrong.
+
+==================================================
+BEST MODE LOGIC
+==================================================
+
+Where legitimate route information exists, evaluate:
+
+journey time
+walking distance
+transfers
+weather
+family composition
+mobility
+time of day
+traveller style
+distance
+
+Example:
+
+8-minute walk:
+likely walk.
+
+45-minute walk vs 9-minute taxi:
+likely taxi.
+
+Transit requiring 3 changes vs 15-minute taxi:
+for Luxury traveller, likely taxi.
+
+Backpacker:
+may still prefer transit.
+
+==================================================
+TRAVELLER STYLE SHOULD AFFECT TRANSPORT
+==================================================
+
+Examples:
+
+BACKPACKING
+prefer public transit / walking where practical
+
+LUXURY
+prefer efficient comfortable transfer where worthwhile
+
+SLOW TRAVEL
+higher walking tolerance within neighbourhoods
+
+WELLNESS
+avoid excessive transfer burden
+
+FAMILY
+reduce unnecessary walking/transfers
+
+==================================================
+PART O
+ROUTE OPTIMISATION
+==================================================
+
+Within a day offer:
+
+OPTIMISE DAY
+
+Consider:
+
+geographic order
+opening windows
+locked stops
+meal times
+weather
+transport
+user pace
+day/night suitability
+
+Do NOT simply run shortest-distance ordering.
+
+==================================================
+USER CONTROL
+==================================================
+
+Before changing itinerary order show:
+
+BETTER ORDER AVAILABLE
+
+“Moving the museum before the market avoids backtracking and saves approximately 34 minutes.”
+
+[ Apply ]
+
+[ Keep my order ]
+
+Do not silently reorder a confirmed plan.
+
+==================================================
+PART P
+HOTEL + ROUTING MUST CONNECT
+==================================================
+
+The selected hotel/base becomes the real day's starting/ending anchor where appropriate.
+
+Hotel change should trigger:
+
+route recalculation
+
+hotel suitability recalculation
+
+travel burden recalculation
+
+but NOT wipe the itinerary.
+
+==================================================
+PART Q
+BOOKINGS
+==================================================
+
+Keep Bookings simple.
+
+Allow:
+
+Flight
+Hotel
+Train
+Reservation
+Ticket
+Other
+
+Bookings should influence the itinerary.
+
+Example:
+
+hotel booking:
+becomes base
+
+arrival flight:
+constrains Day 1
+
+departure flight:
+constrains final day
+
+train booking:
+locks relevant transfer
+
+==================================================
+DO NOT MAKE SUGGESTED HOTEL LOOK BOOKED
+==================================================
+
+Clearly distinguish:
+
+SUGGESTED BASE
+
+from:
+
+BOOKED HOTEL
+
+==================================================
+PART R
+LLM RESPONSIBILITY
+==================================================
+
+LLM MAY:
+
+understand the trip brief
+
+understand traveller style
+
+understand city/nature preference
+
+curate verified destination candidates
+
+explain why attractions matter
+
+explain why something was included
+
+explain why something was omitted
+
+explain hotel trade-offs from verified data
+
+construct a coherent first-cut trip from verified options
+
+produce KAIROS · AWAY commentary
+
+==================================================
+LLM MUST NOT INVENT
+==================================================
+
+Do NOT let LLM invent:
+
+places
+coordinates
+addresses
+opening hours
+travel times
+transit routes
+weather
+hotel facilities
+hotel reviews
+noise complaints
+A/C control
+room size
+event listings
+
+==================================================
+PART S
+FREE-FIRST ARCHITECTURE
+==================================================
+
+This feature must remain FREE-FIRST.
+
+Do NOT introduce a mandatory paid dependency without approval.
+
+Prefer:
+
+MapLibre
+
+OpenStreetMap
+
+Wikidata
+
+Wikimedia Commons
+
+Wikipedia
+
+Overpass
+
+OSRM / legitimate open routing
+
+other open/free sources where permitted
+
+==================================================
+PROVIDER ABSTRACTION
+==================================================
+
+Maintain clean providers such as:
+
+DestinationKnowledgeProvider
+
+PlaceDiscoveryProvider
+
+PlacePhotoProvider
+
+PlaceDescriptionProvider
+
+GeocoderProvider
+
+RoutingProvider
+
+TransitProvider
+
+WeatherProvider
+
+HotelFactsProvider
+
+HotelReviewProvider
+
+EventProvider
+
+Business logic must not contain provider-specific code everywhere.
+
+==================================================
+PUBLIC FREE SERVERS ARE NOT UNLIMITED
+==================================================
+
+Use:
+
+caching
+debouncing
+request deduplication
+rate limiting
+backoff
+provider fallback
+
+Design so services can be self-hosted later where practical.
+
+==================================================
+PART T
+DESTINATION DISCOVERY
+==================================================
+
+Before final planning:
+
+retrieve a broad enough REAL candidate universe.
+
+Where possible:
+
+30–100+ verified places
+
+across:
+
+major attractions
+culture
+nature
+food
+shopping
+night
+family
+historic
+museums
+markets
+parks
+viewpoints
+excursions
+
+Then:
+
+deduplicate
+verify
+categorise
+importance-classify
+cluster
+rank
+
+==================================================
+PART U
+CONTINUOUS RECOMMENDATIONS
+==================================================
+
+After user edits the itinerary:
+
+update Discover.
+
+Examples:
+
+NEAR DAY 3
+
+YOU HAVE A FREE EVENING
+
+RAIN BACKUP
+
+DAY 4 IS HEAVY
+
+MAJOR SIGHT NOT YET INCLUDED
+
+This should mostly use:
+
+existing candidate pool
+routing
+geographic logic
+cached data
+
+Do NOT call LLM every time a user moves a card.
+
+==================================================
+PART V
+KAIROS · AWAY
+==================================================
+
+Keep KAIROS · AWAY.
+
+Use it for meaningful planning commentary.
+
+Examples:
+
+“Three cities in five days is possible. Enjoyable is a separate question.”
+
+“You asked for balanced city and nature. I’ve kept two full days outside central Chengdu.”
+
+“Same view, one less hotel change. I’d take the easier version.”
+
+“Beautiful place. Unfortunately, it also wants four hours of your day.”
+
+Do not spam this after every interaction.
+
+==================================================
+PART W
+CHENGDU ACCEPTANCE TEST
+==================================================
+
+Run:
+
+DESTINATION:
+Chengdu
+
+DURATION:
+6 nights
+
+PEOPLE:
+2 adults
+
+PACE:
+Balanced
+
+TRAVEL STYLE:
+Comfort
+
+TRIP BALANCE:
+Balanced City / Nature
+
+INTERESTS:
+Food
+Nature
+Culture
+Shopping
+Night
+
+HOTEL PREFERENCE:
+One base / minimise hotel changes
+
+TRANSPORT PREFERENCE:
+Transit
+
+==================================================
+CHENGDU FIRST-CUT EXPECTATION
+==================================================
+
+The first cut should:
+
+identify major Chengdu experience groups
+
+strongly consider defining first-time attractions
+
+include meaningful urban Chengdu
+
+consider panda experience
+
+consider Dujiangyan
+
+consider major nature excursions
+
+consider important heritage/cultural areas
+
+consider food/shopping/night experiences
+
+group nearby places sensibly
+
+treat major excursions as excursion days
+
+==================================================
+CHENGDU COVERAGE RESULT
+==================================================
+
+After planning:
+
+show:
+
+COVERED
+
+NOT COVERED
+
+WHY
+
+The user should be able to see which major Chengdu experiences were deliberately omitted.
+
+==================================================
+CHENGDU DISCOVER RESULT
+==================================================
+
+DISCOVER must NOT say:
+
+“Nothing is waiting.”
+
+It should contain:
+
+real alternatives
+photos where available
+descriptions
+importance
+why Kairos recommends them
+add/save/not-for-me controls
+
+==================================================
+CHENGDU TRANSPORT RESULT
+==================================================
+
+If real transit routing is unavailable:
+
+do NOT display road time as transit.
+
+Be transparent.
+
+==================================================
+PART X
+SINGAPORE ACCEPTANCE TEST
+==================================================
+
+Run:
+
+Singapore
+
+5 nights
+
+First visit
+
+Balanced pace
+
+Balanced City / Nature
+
+Comfort
+
+General interests
+
+Expected:
+
+Kairos should strongly consider the destination's defining visitor experiences.
+
+It must NOT generate a first-time itinerary dominated by obscure POIs while missing most major sights.
+
+==================================================
+PART Y
+HOTEL ACCEPTANCE TEST
+==================================================
+
+Compare at least 3 genuine hotel candidates where data permits.
+
+For each show:
+
+location suitability relative to itinerary
+
+travel burden
+
+room/facility information if verified
+
+A/C status
+
+noise/review signal if legitimately available
+
+unknown fields explicitly
+
+Do NOT invent missing evidence.
+
+==================================================
+PART Z
+PLACE INTERACTION TEST
+==================================================
+
+1. Open Discover.
+
+2. Tap a recommended place.
+
+Expected:
+Place Detail opens.
+
+3. Tap Add.
+
+Expected:
+Kairos proposes best day and explains why.
+
+4. Accept.
+
+Expected:
+Plan updates.
+Map updates.
+Routes update.
+Timing updates.
+
+5. Remove.
+
+Expected:
+Day recalculates without regenerating whole trip.
+
+==================================================
+MAP TEST
+==================================================
+
+Tap itinerary stop.
+
+Expected:
+same canonical place highlighted on map.
+
+Tap map marker.
+
+Expected:
+same Place Detail opens.
+
+==================================================
+TRANSPORT TEST
+==================================================
+
+For sequential places:
+
+show actual available route modes.
+
+If transit unavailable:
+
+say so.
+
+==================================================
+ROUTE OPTIMISATION TEST
+==================================================
+
+Create an inefficient stop order.
+
+Expected:
+
+Kairos identifies backtracking and suggests an improved sequence.
+
+User decides whether to apply.
+
+==================================================
+SUCCESS CRITERIA
+==================================================
+
+A user should feel:
+
+“Kairos knows what I should probably see.”
+
+“Kairos understands what kind of traveller I am.”
+
+“Kairos has balanced city and nature the way I asked.”
+
+“I understand what major things were left out.”
+
+“I know why the hotel makes sense.”
+
+“I can discover more places visually.”
+
+“I can add and remove things easily.”
+
+“I can see where everything is.”
+
+“I do not have to manually solve every journey between places.”
+
+“The itinerary makes geographic sense.”
+
+==================================================
+FINAL PRODUCT PRINCIPLE
+==================================================
+
+TRAVEL MUST FIRST ANSWER:
+
+WHAT SHOULD I EXPERIENCE?
+
+THEN:
+
+WHICH EXPERIENCES FIT ME?
+
+THEN:
+
+HOW SHOULD THEY BE GROUPED?
+
+THEN:
+
+WHERE SHOULD I STAY?
+
+THEN:
+
+HOW SHOULD I GET AROUND?
+
+THEN:
+
+WHAT ELSE COULD I ADD?
+
+That is the hierarchy.
+
+==================================================
+FINAL REPORT
+==================================================
+
+After implementing, report:
+
+1. Files changed
+
+2. New Travel architecture
+
+3. How DestinationProfile works
+
+4. Data sources used for destination knowledge
+
+5. How Iconic / Major / Interest-Specific places are classified
+
+6. How first-time visitor coverage works
+
+7. How coverage failure is detected
+
+8. How omitted major sights are explained
+
+9. How traveller style changes planning
+
+10. How City/Nature balance changes planning
+
+11. How Pace differs from Travel Style
+
+12. How geographic clustering works
+
+13. How excursion destinations are handled
+
+14. How broad first-cut planning works
+
+15. How hotel/base strategy works
+
+16. Which hotel data is genuinely available
+
+17. Which hotel review data is genuinely available
+
+18. How A/C is handled
+
+19. How noise/soundproofing is handled
+
+20. What hotel information remains unverifiable
+
+21. How hotel change burden is calculated
+
+22. Why the previous Places tab was empty
+
+23. New Discover candidate count for Chengdu
+
+24. Categories discovered
+
+25. Photo providers
+
+26. Description providers
+
+27. How source verification works
+
+28. How Add works
+
+29. How Save works
+
+30. How Not For Me works
+
+31. How Remove works
+
+32. How Move works
+
+33. How Plan / Discover / Map share one canonical Place object
+
+34. How transport legs work
+
+35. Which route modes genuinely work
+
+36. Transit limitations
+
+37. What happens when transit routing is unavailable
+
+38. How best transport mode is chosen
+
+39. How traveller style affects transport
+
+40. How route optimisation works
+
+41. How free-first requirements are maintained
+
+42. External APIs/services used
+
+43. Any rate limits / commercial-use restrictions
+
+44. LLM call count for a normal 6-day trip
+
+45. Chengdu first-cut itinerary
+
+46. Chengdu destination coverage summary
+
+47. Singapore first-cut itinerary
+
+48. Singapore destination coverage summary
+
+49. Hotel comparison acceptance-test result
+
+50. Mobile UX result for:
+    Plan
+    Discover
+    Place Detail
+    Add to Day
+    Map
+    Transport Leg
+
+51. Desktop Plan + Map experience
+
+52. Remaining limitations
+
+DO NOT declare this complete merely because:
+
+the interface looks better.
+
+The underlying first-cut itinerary,
+destination coverage,
+hotel/base decision,
+discoverability,
+and transport logic
+
+must genuinely improve.
+
+==================================================
+ULTIMATE KAIROS TRAVEL LOOP
+==================================================
+
+UNDERSTAND DESTINATION
+→
+UNDERSTAND TRAVELLER
+→
+BUILD STRONG FIRST CUT
+→
+VERIFY MAJOR-SIGHT COVERAGE
+→
+CHOOSE SENSIBLE BASE
+→
+GROUP GEOGRAPHICALLY
+→
+SOLVE TRANSPORT
+→
+DISCOVER MORE
+→
+ADD / REMOVE / MOVE
+→
+RE-ROUTE
+→
+REFINE
+
+Wanderlog is the UX reference for:
+
+DISCOVERING PLACES
+MANAGING PLACES
+MAP / ITINERARY LINKAGE
+REFINING A TRIP
+
+KAIROS must go beyond that by being better at:
+
+WHAT SHOULD GO INTO THE TRIP IN THE FIRST PLACE
+
+WHY
+
+WHERE IT BELONGS
+
+WHERE TO STAY
+
+AND HOW TO GET AROUND EFFICIENTLY.

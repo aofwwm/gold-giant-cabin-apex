@@ -1,0 +1,538 @@
+Please improve the new KAIROS ORACLE mode by making the divination methods transparent to the user.
+
+This is IMPORTANT.
+
+CURRENT PRODUCT PRINCIPLE:
+
+KAIROS
+= product
+
+ORACLE
+= mode
+
+神婆
+= interpreting personality
+
+The user must clearly understand what divination systems Oracle actually uses.
+
+Do NOT make Oracle feel like:
+
+“LLM generated a mystical answer.”
+
+The experience should communicate:
+
+REAL DIVINATION SIGNALS
+↓
+LLM / 神婆 INTERPRETATION
+
+==================================================
+ADD “HOW ORACLE READS THE SIGNS”
+==================================================
+
+Near the top of Oracle, before the main question input, add a compact section:
+
+HOW ORACLE READS THE SIGNS
+
+Show the available divination systems.
+
+Suggested cards/chips:
+
+通胜
+Tong Shu
+
+Tarot
+
+Numerology
+
+Chinese Zodiac
+
+BaZi
+
+I Ching
+
+Astrology
+
+Do NOT claim every system is currently functional.
+
+==================================================
+METHOD STATUS
+==================================================
+
+Every divination layer should have one of these statuses:
+
+AVAILABLE
+
+NEEDS INFO
+
+NOT CONNECTED
+
+NOT APPLICABLE
+
+Example:
+
+TONG SHU
+Available
+
+TAROT
+Available
+
+NUMEROLOGY
+Available
+
+CHINESE ZODIAC
+Needs date of birth
+
+BAZI
+Needs birth date + time
+
+I CHING
+Available
+
+ASTROLOGY
+Not connected
+
+Do not fake availability.
+
+==================================================
+SHORT EXPLANATION
+==================================================
+
+Each system should have a short explanation.
+
+Example:
+
+TONG SHU
+Chinese almanac timing and auspiciousness.
+
+TAROT
+Symbolic card draw used for reflective interpretation.
+
+NUMEROLOGY
+Date- and number-based patterns.
+
+CHINESE ZODIAC
+Zodiac relationships and timing context.
+
+BAZI
+Personalised Five Elements reading using birth date/time.
+
+I CHING
+Hexagram-based divination.
+
+ASTROLOGY
+Planetary timing using real ephemeris calculations.
+
+Keep descriptions concise.
+
+==================================================
+EXPANDABLE “HOW THIS WORKS”
+==================================================
+
+Add:
+
+[ How this works ]
+
+When expanded, explain:
+
+“Oracle combines available divination systems, then asks 神婆 to interpret where the signs agree, disagree, or remain unclear.”
+
+Also explain:
+
+“Not every reading uses every system.”
+
+Keep the tone elegant.
+
+Do not create a giant disclaimer block.
+
+==================================================
+QUESTION-SPECIFIC METHOD SELECTION
+==================================================
+
+After the user submits a question, determine which AVAILABLE layers are relevant.
+
+Example question:
+
+“Is Friday a good day to sign the contract?”
+
+Possible layers:
+
+Tong Shu
+Numerology
+Tarot
+
+BaZi:
+only if personal birth information exists and is relevant
+
+Astrology:
+only if genuinely implemented
+
+==================================================
+SHOW “USED IN THIS READING”
+==================================================
+
+Above or below the 神婆 response, show:
+
+USED IN THIS READING
+
+✓ Tong Shu
+✓ Tarot
+✓ Numerology
+
+Optional:
+
+BaZi
+Not used
+
+Astrology
+Not connected
+
+The user must be able to see exactly what contributed to the answer.
+
+==================================================
+DO NOT SHOW UNUSED SIGNALS AS IF THEY CONTRIBUTED
+==================================================
+
+If Astrology is not implemented:
+
+do NOT display:
+
+Astrology · Neutral
+
+Instead:
+
+ASTROLOGY
+Not connected
+
+If BaZi requires birth time:
+
+BAZI
+Birth time required
+
+If Chinese Zodiac is irrelevant:
+
+CHINESE ZODIAC
+Not used for this reading
+
+==================================================
+METHOD SELECTION EXAMPLES
+==================================================
+
+TIMING QUESTION
+
+“Is Friday good for launching?”
+
+Potential:
+
+Tong Shu
+Numerology
+Tarot
+
+--------------------------------------------------
+
+CAREER DECISION
+
+“Should I accept the new job?”
+
+Potential:
+
+Tarot
+Numerology
+
+Optional:
+BaZi if profile exists
+
+Tong Shu only if timing/date is part of the question.
+
+--------------------------------------------------
+
+RELATIONSHIP QUESTION
+
+“What is the energy around this relationship?”
+
+Potential:
+
+Tarot
+Chinese Zodiac
+BaZi if both people's data exists
+
+Do NOT automatically use Tong Shu unless timing is involved.
+
+--------------------------------------------------
+
+TRAVEL TIMING
+
+“Which weekend is better for travelling?”
+
+Potential:
+
+Tong Shu
+Numerology
+Tarot
+
+Practical weather / travel data remains separate.
+
+==================================================
+OPTIONAL USER CONTROL
+==================================================
+
+Allow an advanced user to open:
+
+READING METHODS
+
+and see/select which available layers to include.
+
+Example:
+
+[x] Tong Shu
+[x] Tarot
+[x] Numerology
+[ ] Chinese Zodiac
+[ ] BaZi
+
+However:
+
+Default should be:
+
+AUTO
+
+where Kairos selects relevant methods.
+
+Do not force users to understand every system before asking a question.
+
+==================================================
+DEFAULT UI
+==================================================
+
+Suggested:
+
+READING METHODS
+
+AUTO · 3–5 methods depending on your question
+
+[ View methods ]
+
+This keeps the main page clean.
+
+==================================================
+BEFORE FIRST QUESTION
+==================================================
+
+The first-time Oracle experience should make this clear:
+
+ORACLE
+
+Ask what’s on your mind.
+
+Oracle can draw from:
+
+通胜 · Tarot · Numerology · Zodiac · I Ching
+
+Some personalised readings may require birth details.
+
+[ How Oracle works ]
+
+Then:
+
+[ question input ]
+
+==================================================
+DIVINATION ENGINE TRANSPARENCY
+==================================================
+
+For each reading, preserve the raw structured result internally.
+
+Example:
+
+{
+  "methodsUsed": [
+    "tong_shu",
+    "tarot",
+    "numerology"
+  ],
+
+  "methodsSkipped": [
+    {
+      "method": "bazi",
+      "reason": "birth_time_missing"
+    },
+
+    {
+      "method": "astrology",
+      "reason": "not_implemented"
+    }
+  ]
+}
+
+The frontend should render this truthfully.
+
+==================================================
+RESULT DISPLAY
+==================================================
+
+Example:
+
+USED IN THIS READING
+
+TONG SHU
+Favourable
+
+TAROT
+Strength · Upright
+
+NUMEROLOGY
+Personal Day 6
+
+Then:
+
+神婆 SAYS
+
+“The timing favours starting the conversation, but not forcing the answer.”
+
+==================================================
+CONFLICTING SYSTEMS
+==================================================
+
+If methods disagree, show that.
+
+Example:
+
+THE SIGNS ARE MIXED
+
+Tong Shu
+Favourable
+
+Tarot
+Caution
+
+Numerology
+Neutral
+
+Then 神婆 can interpret the disagreement.
+
+Do NOT hide disagreement simply to create a cleaner answer.
+
+==================================================
+IMPORTANT:
+LLM DOES NOT CHOOSE THE RESULT
+==================================================
+
+The LLM may decide:
+
+which IMPLEMENTED layers are relevant
+
+but it must NOT invent their outputs.
+
+Example:
+
+LLM can decide:
+Use Tarot.
+
+Application code must then actually draw the card.
+
+LLM must not decide:
+“The card should be The Star.”
+
+Same rule for all divination engines.
+
+==================================================
+VISUAL DESIGN
+==================================================
+
+Use Oracle's existing:
+
+deep violet
+midnight blue
+moon silver
+crystal blue
+
+theme.
+
+The methods panel should look like:
+
+a set of small mystical instruments / layers
+
+not:
+
+a technical settings screen.
+
+Avoid giant icons.
+
+Use restrained symbols and typography.
+
+==================================================
+ACCEPTANCE TEST
+==================================================
+
+TEST 1
+
+Open Oracle before asking anything.
+
+Expected:
+
+User can clearly see which divination methods are available.
+
+==================================================
+
+TEST 2
+
+Ask:
+
+“Is tomorrow a good day to talk to my boss?”
+
+Expected:
+
+USED IN THIS READING clearly identifies actual methods used.
+
+==================================================
+
+TEST 3
+
+Astrology is not implemented.
+
+Expected:
+
+Oracle does NOT imply Astrology contributed.
+
+==================================================
+
+TEST 4
+
+BaZi requires missing birth time.
+
+Expected:
+
+BAZI
+Birth time required
+
+not a fake BaZi reading.
+
+==================================================
+
+TEST 5
+
+Two systems disagree.
+
+Expected:
+
+disagreement is shown honestly.
+
+==================================================
+FINAL REQUIREMENT
+==================================================
+
+Please IMPLEMENT this transparency layer in Oracle.
+
+The user should always be able to answer:
+
+“What systems did Oracle use to give me this reading?”
+
+After implementation report:
+
+1. Which divination methods are genuinely implemented
+2. Which are not implemented
+3. Which require additional user information
+4. How Oracle chooses relevant methods
+5. How methods used are stored
+6. How unused/unavailable methods are represented
+7. How conflicting signals are displayed
+8. Confirmation that the LLM cannot invent method outputs

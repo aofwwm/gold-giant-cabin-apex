@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/?mode=travel",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 996,
+      "bodyTextHash": "c95d3a045f96663bec40b0f81e5ab4d7ee47a9ffdfde7a63b382e53cfca77442",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Find the right time. Th",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/travel-v3-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 996,
+      "bodyTextHash": "c95d3a045f96663bec40b0f81e5ab4d7ee47a9ffdfde7a63b382e53cfca77442",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Find the right time. Th",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/travel-v3-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/travel-v3-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

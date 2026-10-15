@@ -1,0 +1,183 @@
+The Dating invitation can now be created and shared, but the RECEIVER gets:
+
+“This invitation is no longer available.”
+
+Creation and sharing are therefore working.
+
+The failure is now on PUBLIC INVITATION RETRIEVAL.
+
+I have created this Supabase RPC:
+
+public.get_dating_invitation(p_invite_slug text)
+
+Do NOT anonymously query:
+
+.from("dating_invitations").select(...)
+
+because RLS protects the table.
+
+==================================================
+FIX THE PUBLIC /date/:slug PAGE
+==================================================
+
+When someone opens:
+
+/date/:inviteSlug
+
+retrieve the slug from the route.
+
+Then call:
+
+const { data, error } = await supabase.rpc(
+  "get_dating_invitation",
+  {
+    p_invite_slug: inviteSlug
+  }
+);
+
+Use the returned sanitised invitation data to render the page.
+
+Do NOT rely on:
+
+- planner React state
+- localStorage
+- sessionStorage
+- creator login
+- direct anonymous SELECT from dating_invitations
+
+==================================================
+IMPORTANT DEBUGGING
+==================================================
+
+The current page always displays:
+
+“This invitation is no longer available.”
+
+That hides the real failure.
+
+Temporarily log:
+
+[PUBLIC INVITE] route slug:
+<actual slug>
+
+[PUBLIC INVITE] RPC started
+
+[PUBLIC INVITE] RPC data:
+<data>
+
+[PUBLIC INVITE] RPC error:
+<error>
+
+I need to know whether the problem is:
+
+1. wrong slug in the URL
+2. get_dating_invitation RPC failing
+3. no matching row
+4. invitation status is revoked
+5. route parsing is wrong
+6. schema mismatch
+
+==================================================
+CHECK SLUG MATCH
+==================================================
+
+Compare:
+
+A. invite_slug stored in Supabase
+
+with:
+
+B. slug in receiver URL
+
+They must match EXACTLY, including uppercase/lowercase.
+
+Example:
+
+Database:
+LUNHAI4dNxRW
+
+URL:
+/date/LUNHAI4dNxRW
+
+Do not lowercase or uppercase the route slug.
+
+==================================================
+DO NOT SHOW “NO LONGER AVAILABLE” FOR EVERY ERROR
+==================================================
+
+Use separate states.
+
+LOADING:
+Opening your invitation…
+
+NOT FOUND:
+This invitation is no longer available.
+
+ERROR:
+We couldn’t open this invitation right now.
+
+[ Try again ]
+
+Do not treat a network/RPC/RLS error as “not found.”
+
+==================================================
+VERIFY THE DATABASE RECORD
+==================================================
+
+After creating an invitation, confirm:
+
+invite_slug exists
+status = pending
+public_payload contains the invitation
+
+Example:
+
+select
+  invite_slug,
+  status,
+  public_payload
+from public.dating_invitations
+order by created_at desc
+limit 5;
+
+==================================================
+MANDATORY TEST
+==================================================
+
+1. Create a brand new Dating invitation.
+
+2. Record the exact invite_slug stored in Supabase.
+
+3. Copy the invitation URL.
+
+4. Confirm the URL contains the exact same slug.
+
+5. Open it in incognito.
+
+6. Confirm get_dating_invitation RPC returns a row.
+
+7. Confirm the invitation renders.
+
+8. Open the same link on another phone.
+
+9. Confirm it renders there too.
+
+==================================================
+DO NOT CHANGE THE CREATE FLOW
+==================================================
+
+Invitation creation is now working.
+
+Do not start changing the slug generator or create_dating_invitation again unless a new error proves it is necessary.
+
+Focus only on public retrieval.
+
+After fixing, report:
+
+1. Exact slug stored in Supabase
+2. Exact slug from the receiver URL
+3. Whether they match
+4. get_dating_invitation RPC result
+5. Whether status is pending/revoked
+6. Incognito result
+7. Second-device result

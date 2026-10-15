@@ -1,0 +1,28 @@
+I have an issue where re-rolling suggestions keeps defaulting to the same narrow venues (e.g., repeatedly suggesting Changi Village Hawker Centre for Pasir Ris/East side).
+
+Please update the date generator logic with the following fixes:
+
+1. Maintain a Rejected/History List:
+- Store previously suggested venue names in state (`rejectedVenues: string[]`).
+- Whenever the user clicks "Different shape" or re-rolls, pass this array into the prompt as a hard negative constraint:
+  `"BANNED VENUES (Do NOT suggest these again): ${rejectedVenues.join(', ')}"`
+
+2. Add a Curated Local Knowledge Base (Singapore East & Beyond):
+When the user picks East side (Pasir Ris, Tampines, Bedok, Changi, Katong, Siglap, Joo Chiat), the LLM prompt should explicitly consider genuine cosy, conversational spots across various price points instead of defaulting to noisy hawker centers:
+- Changi Coastal / Civil Service Club: The Coastal Settlement, Little Island Brewing Co (Cosy rustic beer garden).
+- Bedok / Siglap: Next Door Spanish Cafe, Georges @ The Cove, Craftsmen Specialty Coffee, Percolate, Penny University.
+- Katong / Joo Chiat: Birds of Paradise + seaside walk, Common Man Coffee Roasters Joo Chiat, Rabbit Carrot Gun, Choice Cuts Goods.
+- Pasir Ris / Tampines: Georges @ Pasir Ris Park (Park greenery/breeze), Green Veranda, Hub & Spoke Cafe (Airport/Changi canopy), Bark Cafe (Changi).
+
+3. Fix the Vibe Compatibility Logic:
+- If the user filters for "Cosy + Quiet" and "Somewhere we can actually talk":
+  Strictly penalize open-air crowded hawker centres (like Changi Village or 85 Bedok Fengshan).
+  Prioritize: Park-side cafes, quiet bistros, dessert bars, craft taprooms with indoor/outdoor garden seating.
+
+4. Relax Geographic Boundary when Trapped:
+- If a spot cannot be found strictly within 10-15 minutes of Pasir Ris Close that meets "Cosy + Quiet", automatically widen the boundary to include Siglap/Joo Chiat or Changi Airport Jewel/Canopy (15-20 min drive) and tell the user: "Expanded slightly into Siglap/Changi rustic edge for better conversational vibes."
+
+5. Gemini Generation Config:
+Ensure the API call uses:
+- `temperature: 0.95`
+- `topP: 0.95`

@@ -1,0 +1,41 @@
+{
+  "url": "http://127.0.0.1:8081/?mode=travel",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 1230,
+      "bodyTextHash": "3ede66e99e9618b6568b222c5ee689acf5720f6ca467e4d2ccfdf22bffd263e8",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Find the right time. Th",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/travel-nav-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Kairos · 良辰吉日",
+      "hasCanvas": false,
+      "bodyTextLen": 1230,
+      "bodyTextHash": "3ede66e99e9618b6568b222c5ee689acf5720f6ca467e4d2ccfdf22bffd263e8",
+      "bodyTextPrefix": "吉 GOOD TIMES KAIROS 良辰吉日 Event code Join Find the right time. Th",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/travel-nav-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/travel-nav-built.json",
+  "divergesFromBaseline": true,
+  "baselineReasons": [
+    "desktop: body text changed (996 -> 1230 chars, hash mismatch)",
+    "mobile: body text changed (996 -> 1230 chars, hash mismatch)"
+  ]
+}

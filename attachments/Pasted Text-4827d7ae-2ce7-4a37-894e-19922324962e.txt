@@ -1,0 +1,229 @@
+Add an important transparency layer to ORACLE.
+
+The user must understand that:
+
+KAIROS DOES NOT USE EVERY DIVINATION METHOD FOR EVERY QUESTION.
+
+The methods selected depend on:
+
+1. what the user is asking
+2. what information is available
+3. which divination systems are genuinely relevant to that type of question
+
+==================================================
+BEFORE THE QUESTION
+==================================================
+
+Add concise explanatory copy:
+
+HOW ORACLE WORKS
+
+“Kairos chooses the divination methods that best fit your question. A timing question may use Tong Shu, while a decision may call for Tarot or I Ching.
+
+Different questions, different signs.”
+
+Keep this concise and premium.
+
+Do not make it sound technical.
+
+==================================================
+AFTER QUESTION CLASSIFICATION
+==================================================
+
+Once Kairos understands the question, show:
+
+KAIROS SELECTED · X METHODS
+
+“Based on what you're asking, these methods are most relevant.”
+
+Then list each selected method AND WHY IT WAS SELECTED.
+
+Example question:
+
+“Should I accept this new job?”
+
+Show:
+
+TAROT
+For the opportunities, tensions and emotional dynamics around the decision.
+
+I CHING · 易经
+For understanding change, direction and how the situation may develop.
+
+NUMEROLOGY
+For adding your current personal timing cycle to the reading.
+
+==================================================
+TIMING EXAMPLE
+==================================================
+
+Question:
+
+“Which day next week should I launch?”
+
+Potential UI:
+
+KAIROS SELECTED · 3 METHODS
+
+TONG SHU · 通胜
+Chosen because you're asking about auspicious timing.
+
+NUMEROLOGY
+Chosen to compare the numerical character of the candidate dates.
+
+I CHING · 易经
+Chosen for guidance around initiation, change and direction.
+
+==================================================
+RELATIONSHIP EXAMPLE
+==================================================
+
+Question:
+
+“What is happening with this relationship?”
+
+Potential:
+
+TAROT
+Chosen to explore the emotional dynamics and underlying tensions.
+
+CHINESE ZODIAC
+Chosen for compatibility and relationship context, if birth information is available.
+
+BAZI · 八字
+Chosen for deeper personalised compatibility only if sufficient birth information exists.
+
+Do NOT use Tong Shu unless the question involves timing.
+
+==================================================
+METHOD SELECTION EXPLANATION
+==================================================
+
+Each selected method should have:
+
+method name
+status
+one short sentence explaining WHY it was chosen
+
+Example structured data:
+
+{
+  "method": "tong_shu",
+  "selected": true,
+  "reason": "The question asks which date is most suitable for an important action."
+}
+
+Another:
+
+{
+  "method": "tarot",
+  "selected": true,
+  "reason": "The question involves uncertainty around a personal decision."
+}
+
+==================================================
+IMPORTANT
+==================================================
+
+The explanation must correspond to the actual method-selection logic.
+
+Do NOT let the frontend invent generic reasons after the fact.
+
+The same classification that selects the method should provide the reason.
+
+==================================================
+NOT SELECTED
+==================================================
+
+Under:
+
+[ View all methods ]
+
+users may also see why something was not selected.
+
+Example:
+
+TONG SHU
+Not used
+This question is not primarily about date or timing.
+
+BAZI
+Not used
+Birth information is not available.
+
+ASTROLOGY
+Not connected
+
+Keep this secondary.
+
+Do not clutter the main reading.
+
+==================================================
+DEFAULT EXPERIENCE
+==================================================
+
+The main flow should feel like:
+
+USER ASKS
+↓
+KAIROS UNDERSTANDS THE QUESTION
+↓
+KAIROS SELECTS RELEVANT DIVINATION METHODS
+↓
+USER SEES WHICH METHODS WERE SELECTED + WHY
+↓
+THE METHODS GENERATE THEIR ACTUAL SIGNALS
+↓
+神婆 INTERPRETS THEM
+
+This transparency is a core part of Oracle.
+
+==================================================
+COPY RULE
+==================================================
+
+Use the term:
+
+DIVINATION
+
+not:
+
+DIVINITY
+
+when referring to Tarot, Tong Shu, I Ching, etc.
+
+==================================================
+ACCEPTANCE TEST
+==================================================
+
+Question:
+
+“Is Friday a good day to sign the contract?”
+
+Expected:
+
+Kairos explicitly explains why Tong Shu was selected.
+
+Question:
+
+“Should I change jobs?”
+
+Expected:
+
+Kairos may select Tarot / I Ching / Numerology and explains why.
+
+Tong Shu should not automatically be included unless timing is part of the question.
+
+Question:
+
+“Are we compatible?”
+
+Expected:
+
+relationship-relevant methods are selected.
+
+Each selected method includes a concise reason.
+
+The user should always be able to answer:
+
+“Why did Kairos use these divination methods for my question?”

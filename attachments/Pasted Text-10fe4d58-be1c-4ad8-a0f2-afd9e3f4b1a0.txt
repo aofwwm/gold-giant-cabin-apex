@@ -1,0 +1,469 @@
+Please change ONLY the visual theme of the existing TODAY mode in Kairos.
+
+IMPORTANT:
+Do NOT redesign Today.
+Do NOT change its layout, data, logic, routing, timeline behaviour, Replan logic, Supabase logic, or other modes.
+
+This task is purely to give TODAY its own distinct colour identity.
+
+CURRENT PROBLEM:
+
+Today currently feels too visually close to the red/vermilion work modes.
+
+That is not appropriate because Today is the umbrella / central intelligence layer that contains:
+
+- Meet
+- Makan
+- Team Out
+- Family
+- Dating
+- Tasks
+- Appointments
+- Free time
+- Travel
+
+Today should feel neutral, calm and intelligent.
+
+==================================================
+NEW TODAY THEME
+==================================================
+
+Use a:
+
+MIDNIGHT INDIGO + PERIWINKLE
+
+colour system.
+
+Suggested palette:
+
+Primary indigo:
+#6F7FD8
+
+Periwinkle accent:
+#9AA8FF
+
+Slate blue:
+#66738F
+
+Pale ice highlight:
+#C8D3FF
+
+Background:
+keep the existing Kairos dark espresso / near-black background
+
+Text:
+keep warm ivory / off-white
+
+Optional deeper indigo for darker surfaces:
+#4F5FAF
+
+==================================================
+DESIGN INTENT
+==================================================
+
+Today should feel:
+
+- calm
+- intelligent
+- premium
+- temporal
+- organised
+- slightly futuristic
+- central / overarching
+
+It should NOT feel:
+
+- corporate blue
+- generic SaaS
+- bright royal blue
+- neon
+- cyberpunk
+- overly colourful
+
+Think:
+
+“quiet command centre”
+
+rather than:
+
+“tech dashboard”
+
+==================================================
+MODE COLOUR SYSTEM
+==================================================
+
+Preserve the existing mode identities:
+
+TODAY
+Midnight indigo / periwinkle
+
+MEET
+Vermilion / gold
+
+MAKAN
+Vermilion / gold
+
+TEAM OUT
+Vermilion / gold
+
+FAMILY
+Teal / jade / soft sunshine
+
+DATING
+Dusty rose / plum
+
+The Today page should act as the neutral canvas that contains all of them.
+
+==================================================
+TODAY NAV TAB
+==================================================
+
+When Today is active:
+
+change the active top navigation treatment to indigo/periwinkle.
+
+For example:
+
+TODAY
+
+Active underline / pill / border:
+#6F7FD8 or #9AA8FF
+
+Do NOT use red/vermilion for active Today state.
+
+==================================================
+TODAY HEADER
+==================================================
+
+Apply the Today theme to:
+
+- Today title
+- date accents
+- summary chips
+- navigation arrows
+- selected date
+- relevant divider/accent lines
+
+Example:
+
+SATURDAY
+3 OCTOBER
+
+Use restrained periwinkle accents.
+
+Do not make the whole header blue.
+
+==================================================
+TIMELINE
+==================================================
+
+The main timeline spine should use the Today indigo theme.
+
+Example:
+
+timeline vertical line:
+muted indigo
+
+current time marker:
+periwinkle
+
+selected / focused item:
+subtle indigo glow or border
+
+Do NOT recolour every event card indigo.
+
+Individual events must retain subtle source-mode accents.
+
+==================================================
+TIMELINE EVENT ACCENTS
+==================================================
+
+Inside Today:
+
+Meet / Makan / Team Out:
+small vermilion accent
+
+Family:
+small teal accent
+
+Dating:
+small dusty rose accent
+
+Task / Errand / Personal:
+neutral slate / periwinkle accent
+
+Today itself:
+indigo
+
+Example:
+
+| MEET |
+vermilion tag
+
+| FAMILY |
+teal tag
+
+| DATE |
+dusty rose tag
+
+This helps users immediately understand where each timeline item came from.
+
+==================================================
+FREE WINDOWS
+==================================================
+
+Free Window cards should strongly belong to Today.
+
+Use:
+
+indigo / periwinkle.
+
+Example:
+
+FREE WINDOW
+2:10 PM — 4:25 PM
+2 hr 15 min
+
+Use a subtle indigo tinted surface.
+
+Primary CTA:
+
+[ Use this time ]
+
+should use the Today indigo accent.
+
+==================================================
+LEAVE BY
+==================================================
+
+Leave-by information should also use the Today palette.
+
+Example:
+
+LEAVE BY
+6:22 PM
+
+Use periwinkle / pale ice highlight.
+
+Do NOT use warning red unless there is an actual timing problem.
+
+==================================================
+CONFLICTS
+==================================================
+
+Do NOT make normal Today elements red.
+
+Red / amber should be reserved for genuine:
+
+- conflicts
+- impossible travel
+- urgent timing issues
+
+Example:
+
+CONFLICT
+Travel requires 28 min,
+only 15 min available.
+
+This may use warning red/amber.
+
+This keeps red meaningful.
+
+==================================================
+TODAY AT A GLANCE PANEL
+==================================================
+
+Update the right-side Today context panel to the new theme.
+
+Sections:
+
+NEXT
+LEAVE BY
+WEATHER
+TASKS
+FREE TIME
+
+Use indigo/periwinkle for:
+
+- section indicators
+- numbers
+- small dividers
+- active states
+
+Keep the main surface dark.
+
+==================================================
+KAIROS VOICE ON TODAY
+==================================================
+
+Today should no longer use the work-mode vermilion Kairos Voice styling.
+
+Create a Today-specific Kairos Voice variant.
+
+Label:
+
+KAIROS · TODAY
+
+Optional small icon:
+clock / orbit / time glyph
+
+Examples:
+
+KAIROS · TODAY
+
+“Busy morning. Your afternoon is doing all the heavy lifting.”
+
+“Everything fits. Barely.”
+
+“You have 55 useful minutes. Enough for the parcel. Not enough for IKEA.”
+
+Visual treatment:
+
+- indigo tinted background
+- thin periwinkle border
+- warm ivory text
+- subtle pale-blue highlight
+
+Do NOT use the Dating 月老 styling.
+
+Do NOT use the work red styling.
+
+==================================================
+BUTTONS
+==================================================
+
+Primary Today actions should use indigo/periwinkle.
+
+Examples:
+
+[ + Add ]
+
+[ Replan My Day ]
+
+[ Use this time ]
+
+[ Apply changes ]
+
+Secondary buttons can remain neutral/dark.
+
+Do NOT recolour buttons belonging to embedded mode content.
+
+Example:
+
+A Dating-specific action inside a Dating item may still use dusty rose.
+
+==================================================
+CHIPS / SELECTED STATES
+==================================================
+
+Selected Today chips should use:
+
+indigo fill or border
++
+warm ivory text.
+
+Examples:
+
+Today
+Free
+Task
+All day
+
+Avoid red selected states on the Today page.
+
+==================================================
+WEATHER
+==================================================
+
+Weather UI inside Today can use:
+
+- pale ice blue
+- periwinkle
+- subtle sunshine yellow where relevant
+
+Do not force all weather icons into indigo.
+
+Weather should remain semantically understandable.
+
+==================================================
+NOW INDICATOR
+==================================================
+
+Make the NOW indicator distinctive.
+
+Example:
+
+● NOW
+
+Use soft periwinkle.
+
+Do not use bright red.
+
+Past timeline items:
+slightly muted.
+
+Future:
+normal emphasis.
+
+==================================================
+REPLAN MY DAY
+==================================================
+
+The Replan experience should use the Today colour identity.
+
+Example:
+
+REPLAN MY DAY
+
+Proposed changes:
+indigo/periwinkle accents
+
+Fixed/locked items:
+neutral or mode-specific
+
+Warnings:
+amber/red only if necessary
+
+Apply Changes:
+indigo primary CTA
+
+==================================================
+TRANSITIONS
+==================================================
+
+When switching into Today:
+
+use the existing mode-aware transition system.
+
+Target:
+150–250ms
+
+Theme should smoothly shift to indigo/periwinkle.
+
+Do not animate excessively.
+
+==================================================
+CSS / THEME TOKENS
+==================================================
+
+Implement this using the existing mode-aware theme token system.
+
+Do NOT hardcode random indigo values throughout multiple components.
+
+Create / update proper Today theme tokens.
+
+Example concept:
+
+--today-primary: #6F7FD8;
+--today-accent: #9AA8FF;
+--today-secondary: #66738F;
+--today-highlight: #C8D3FF;
+--today-deep: #4F5FAF;
+
+Then map Today components to these tokens.
+
+If the app already has theme variables, integrate into that system instead of creating duplicate systems.
+
+==================================================
+DO NOT CHANGE OTHER MODES
+==================================================

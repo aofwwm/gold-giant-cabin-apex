@@ -1,0 +1,1 @@
+import{i as e}from"./dating.functions-DCDq5Y5-.js";import{t}from"./dating-invite-utQi3tp9.js";async function n(n){if(!t.test(n))return null;let r=await e({data:{plannerToken:n}}).catch(()=>null);return r?.state===`ready`?r.invite:null}export{n as t};

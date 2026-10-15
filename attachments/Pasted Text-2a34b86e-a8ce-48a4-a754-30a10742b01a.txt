@@ -1,0 +1,175 @@
+The public Dating invitation now loads correctly.
+
+The remaining bug is recipient response submission.
+
+Current behaviour:
+
+Recipient presses:
+
+“I’m up for it”
+
+and Kairos shows:
+
+“That reply did not land.”
+
+This is almost certainly because the anonymous recipient is trying to directly UPDATE:
+
+public.dating_invitations
+
+and RLS blocks it.
+
+DO NOT disable RLS.
+
+DO NOT add broad anonymous UPDATE permission.
+
+I have created / will create this controlled RPC:
+
+public.respond_to_dating_invitation(
+  p_invite_slug text,
+  p_response text,
+  p_note text
+)
+
+Replace any direct:
+
+supabase
+  .from("dating_invitations")
+  .update(...)
+
+from the public invitation page.
+
+Instead call:
+
+const { data, error } = await supabase.rpc(
+  "respond_to_dating_invitation",
+  {
+    p_invite_slug: inviteSlug,
+    p_response: "sounds_good",
+    p_note: note || null
+  }
+);
+
+For:
+
+“I’m up for it”
+
+send:
+
+p_response = "sounds_good"
+
+For:
+
+“Suggest another time”
+
+send:
+
+p_response = "alternate_time_requested"
+
+IMPORTANT:
+
+Do not allow arbitrary status values.
+
+The recipient must not be able to edit:
+
+- itinerary
+- private plan
+- recipient name
+- planner notes
+- invite slug
+- public payload
+- visibility
+
+Only response/status + recipient note should be writable through this RPC.
+
+==================================================
+UI SUCCESS STATES
+==================================================
+
+When “I’m up for it” succeeds:
+
+replace the buttons with something like:
+
+YOU’RE IN ✓
+
+“Nice. The planner has your reply.”
+
+Optionally:
+
+月老 says
+“Good. My work here is mostly done.”
+
+Keep it restrained.
+
+When “Suggest another time” succeeds:
+
+show:
+
+GOT IT
+
+“Your timing preference has been sent back.”
+
+Do not leave the original buttons active after a successful reply.
+
+==================================================
+NOTE
+==================================================
+
+If the user typed a note:
+
+send it through p_note.
+
+Use a dedicated recipient_note field if one exists.
+
+Do not overwrite the sender's invitation message.
+
+==================================================
+ERROR HANDLING
+==================================================
+
+If RPC fails:
+
+log the full development error:
+
+console.error("[Dating response error]", error);
+
+UI should show:
+
+“Couldn’t send your reply.”
+
+[ Try again ]
+
+Do not use the vague:
+
+“That reply did not land.”
+
+for every possible error.
+
+==================================================
+MANDATORY TEST
+==================================================
+
+1. Open invitation on second device/incognito.
+2. Press “I’m up for it”.
+3. Confirm RPC success.
+4. Confirm dating_invitations.status becomes:
+
+sounds_good
+
+5. Confirm recipient note persists if entered.
+6. Reload the public invitation.
+7. Confirm accepted state remains visible.
+8. Test “Suggest another time”.
+9. Confirm status becomes:
+
+alternate_time_requested
+
+10. Confirm no broad anonymous UPDATE policy was added.
+
+Report:
+
+- exact RPC result
+- actual status saved
+- whether RLS remains enabled
+- whether anon has direct UPDATE permission
+- whether recipient note saved
+- second-device result

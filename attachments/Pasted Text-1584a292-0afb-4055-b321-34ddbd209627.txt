@@ -1,0 +1,577 @@
+Please diagnose and FIX the existing Kairos Dating invitation sharing flow.
+
+CURRENT PROBLEM:
+
+Kairos Dating already has:
+- Copy Link
+- WhatsApp sharing
+- public invitation concept
+
+But the shared invitation is not working correctly.
+
+I suspect the front-end sharing buttons exist, but the invitation is either:
+
+- not being persisted to Supabase
+- using local-only state
+- using the wrong public URL
+- blocked by Supabase RLS
+- missing a public route
+- sharing localhost
+- or failing to load invitation data anonymously
+
+IMPORTANT:
+
+Do NOT redesign the Dating UI.
+Do NOT remove the existing invitation design.
+Do NOT replace Supabase.
+Do NOT create a fake front-end-only workaround.
+
+I want the sharing flow to work end-to-end across different devices.
+
+==================================================
+TARGET BEHAVIOUR
+==================================================
+
+The correct flow should be:
+
+Dating plan created
+↓
+Planner taps Share
+↓
+Kairos creates or updates a shareable invitation record
+↓
+Kairos generates a random public invite slug
+↓
+Kairos creates a public URL such as:
+
+https://<deployed-domain>/date/x7K9mP2vQc
+
+↓
+User chooses:
+WhatsApp
+Share…
+Copy link
+Copy message + link
+
+↓
+Recipient opens link on another phone/browser
+↓
+No Kairos login required
+↓
+Kairos retrieves ONLY the public invitation data from Supabase
+↓
+Recipient sees the correct Dating invitation page
+
+==================================================
+FIRST: INSPECT THE EXISTING IMPLEMENTATION
+==================================================
+
+Before changing anything, inspect:
+
+1. Existing Dating plan components
+2. Existing invitation/share components
+3. Current public routing
+4. Current Supabase schema
+5. Existing dating_invitations table, if any
+6. Existing RLS policies
+7. Current Copy Link implementation
+8. Current WhatsApp share implementation
+9. Current invite URL generation
+10. Whether invitation data currently lives only in React/local state/localStorage
+
+Do not create duplicate systems if a working structure already exists.
+
+==================================================
+DIAGNOSE THE CURRENT FAILURE
+==================================================
+
+Tell me which of these is happening:
+
+A. Invitation slug is generated but never stored
+
+B. Invitation exists in Supabase but public users cannot read it
+
+C. Public /date/:inviteSlug route does not exist or is broken
+
+D. Shared URL points to localhost
+
+E. URL is correct but deployed app routing does not handle direct navigation
+
+F. Invite page reads local state instead of Supabase
+
+G. WhatsApp URL encoding is broken
+
+H. Copy Link is copying the planner/editor URL instead of public invite URL
+
+I. Supabase table structure is incomplete
+
+J. Something else
+
+Fix the actual cause, not just the visible symptom.
+
+==================================================
+SUPABASE INVITATION STORAGE
+==================================================
+
+If not already implemented correctly, use a table like:
+
+public.dating_invitations
+
+Suggested fields:
+
+id uuid primary key
+dating_plan_id uuid nullable
+invite_slug text unique not null
+recipient_name text nullable
+title text nullable
+message text nullable
+tone text nullable
+visibility text not null
+status text not null default 'pending'
+public_payload jsonb not null
+created_at timestamptz default now()
+updated_at timestamptz default now()
+
+Possible visibility values:
+
+full_plan
+first_stop
+mystery
+
+Possible status values:
+
+pending
+sounds_good
+alternate_time_requested
+revoked
+
+Do NOT blindly create this if an equivalent table already exists.
+
+Reuse existing structures where possible.
+
+==================================================
+IMPORTANT: PUBLIC_PAYLOAD
+==================================================
+
+Do NOT expose the full private Dating plan directly to anonymous users.
+
+Create a sanitised public payload.
+
+Example:
+
+{
+  "recipientName": "Jamie",
+  "title": "A Friday Evening for Two",
+  "date": "2026-10-09",
+  "startTime": "19:00",
+  "area": "Sentosa",
+  "message": "Thought this could be nice.",
+  "visibility": "first_stop",
+  "visibleStops": [
+    {
+      "name": "...",
+      "address": "...",
+      "time": "19:00"
+    }
+  ],
+  "durationText": "About 3 hours",
+  "dress": "Smart casual",
+  "vibe": "Cosy + playful"
+}
+
+Never include private/internal fields such as:
+
+- private planner notes
+- hidden Mystery Date destinations
+- home coordinates
+- private saved locations
+- LLM prompts
+- internal scoring data
+- Supabase internal metadata
+- API keys
+- service-role keys
+
+==================================================
+INVITE SLUG
+==================================================
+
+invite_slug must be:
+
+- random
+- non-sequential
+- difficult to guess
+- URL-safe
+
+Good:
+
+x7K9mP2vQc
+
+Bad:
+
+1
+2
+3
+dating-plan-27
+
+Use secure random generation.
+
+Do not expose sequential database IDs.
+
+==================================================
+CREATE INVITATION BEFORE SHARING
+==================================================
+
+When the planner taps:
+
+Share
+
+Kairos must first ensure a valid public invitation exists.
+
+Pseudo-flow:
+
+if invitation does not exist:
+    create Supabase invitation
+else:
+    update existing invitation with latest public payload
+
+Then obtain:
+
+invite_slug
+
+Then build:
+
+publicInvitationUrl
+
+Only after this should:
+
+- Copy Link
+- WhatsApp
+- Native Share
+- Copy Message + Link
+
+become active.
+
+Do not share a URL before the invitation exists.
+
+==================================================
+PUBLIC URL
+==================================================
+
+The public URL must use the deployed application origin.
+
+Preferred approach:
+
+window.location.origin + "/date/" + inviteSlug
+
+BUT:
+
+In development, do not accidentally copy localhost as if it were production.
+
+If there is already an app/base URL environment variable, use it.
+
+Suggested:
+
+VITE_PUBLIC_APP_URL
+
+or appropriate framework equivalent.
+
+Production example:
+
+https://kairos.example.com
+
+Then:
+
+https://kairos.example.com/date/x7K9mP2vQc
+
+If deployed on Vercel/Netlify/etc., inspect existing environment setup.
+
+==================================================
+NO LOCALHOST SHARING IN PRODUCTION
+==================================================
+
+If current code produces:
+
+http://localhost:5173/date/...
+
+fix it.
+
+In development, clearly warn:
+
+“This link is only available on your local machine.”
+
+Do not silently allow a localhost link to be treated as shareable externally.
+
+==================================================
+PUBLIC ROUTE
+==================================================
+
+Implement or verify:
+
+/date/:inviteSlug
+
+This page must:
+
+1. read inviteSlug from route
+2. fetch invitation from Supabase
+3. render public invitation
+4. work without authentication
+5. handle invalid/revoked links gracefully
+6. respect visibility rules
+
+Do NOT rely on React state from the planner page.
+
+Direct navigation must work.
+
+If I paste the URL into a new browser window, it must load.
+
+==================================================
+SPA DEPLOYMENT ROUTING
+==================================================
+
+If this is a Vite/React SPA:
+
+check whether direct navigation to:
+
+/date/x7K9mP2
+
+returns 404 on the hosting platform.
+
+If yes, configure SPA fallback / rewrite correctly.
+
+Examples depending on host:
+
+Vercel:
+rewrite all app routes to index.html where appropriate
+
+Netlify:
+_redirects fallback
+
+Do this according to the actual deployment platform.
+
+Do not guess if deployment config already exists.
+
+==================================================
+SUPABASE RLS
+==================================================
+
+This is critical.
+
+Do NOT disable RLS.
+
+Do NOT make all Dating plans publicly readable.
+
+I want anonymous recipients to access ONLY safe invitation data.
+
+Preferred architecture:
+
+private plan data
+↓
+sanitised dating_invitations public record
+↓
+anonymous read by invite_slug only
+
+Implement the safest practical RLS solution.
+
+==================================================
+RLS REQUIREMENTS
+==================================================
+
+Keep RLS enabled.
+
+Allow anonymous SELECT only for rows intended to be shareable.
+
+For example, public read may require:
+
+status != 'revoked'
+
+and the public page queries by exact invite_slug.
+
+Do NOT expose planner ownership/private tables.
+
+If direct anonymous table SELECT still exposes more columns than desirable, create a safer:
+
+- Supabase view
+- RPC
+- Edge Function
+
+that returns only allowed public fields.
+
+Choose the safest clean solution for the current app.
+
+==================================================
+DO NOT USE SERVICE_ROLE IN BROWSER
+==================================================
+
+Never expose:
+
+SUPABASE_SERVICE_ROLE_KEY
+
+in client code.
+
+Client may use existing:
+
+Supabase URL
+anon/public key
+
+Writes requiring privileged access must happen through a server endpoint / Edge Function if necessary.
+
+==================================================
+PUBLIC FETCH
+==================================================
+
+The recipient page should query by exact invite slug.
+
+Conceptually:
+
+select public invitation
+where invite_slug = supplied slug
+
+Do NOT download the entire invitation table and filter client-side.
+
+==================================================
+INVALID / REVOKED LINK
+==================================================
+
+If invite does not exist:
+
+Show:
+
+“This invitation is no longer available.”
+
+If revoked:
+
+same or similarly graceful message.
+
+Do not expose database errors to the recipient.
+
+==================================================
+COPY LINK
+==================================================
+
+Fix Copy Link so it copies ONLY:
+
+publicInvitationUrl
+
+Example:
+
+https://kairos.example.com/date/x7K9mP2vQc
+
+Do not copy:
+
+- planner URL
+- edit URL
+- current browser route if wrong
+- Supabase URL
+- local state route
+
+Use:
+
+navigator.clipboard.writeText(publicInvitationUrl)
+
+with fallback.
+
+After success:
+
+Copied ✓
+
+for around 1.5–2 seconds.
+
+==================================================
+COPY MESSAGE + LINK
+==================================================
+
+Copy:
+
+short sender-facing invitation text
++
+public invitation URL
+
+Example:
+
+Thought this could be nice 🙂
+Friday · 7:00 PM · Sentosa
+
+https://kairos.example.com/date/x7K9mP2vQc
+
+Respect visibility.
+
+Mystery must not reveal hidden destinations.
+
+==================================================
+WHATSAPP
+==================================================
+
+WhatsApp sharing does NOT require WhatsApp Business API.
+
+Build a properly URL-encoded share link.
+
+Message should include:
+
+short text
++
+public invitation URL
+
+Example raw message:
+
+Thought this could be nice 🙂
+
+Friday · 7:00 PM
+
+https://kairos.example.com/date/x7K9mP2vQc
+
+URL-encode safely.
+
+On mobile:
+open WhatsApp-compatible share/deep-link behaviour.
+
+On desktop:
+open WhatsApp Web-compatible sharing.
+
+Do not auto-send.
+
+User must press Send themselves.
+
+==================================================
+NATIVE SHARE
+==================================================
+
+For Share… use:
+
+navigator.share({
+  title,
+  text,
+  url
+})
+
+where available.
+
+If navigator.share is unavailable:
+
+do not error.
+
+Keep:
+WhatsApp
+Copy Link
+Copy Message + Link
+
+available.
+
+==================================================
+INVITATION STATUS RESPONSE
+==================================================
+
+Recipient actions:
+
+Sounds good
+Another day?
+
+must update the invitation status safely.
+
+Do not allow anonymous users to arbitrarily edit unrelated invitation fields.
+
+Only allow the intended response fields.
+
+If needed, implement a controlled RPC/Edge Function for response updates.
+
+==================================================
+TEST WITH
